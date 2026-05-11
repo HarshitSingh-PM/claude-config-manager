@@ -1,15 +1,15 @@
 # Claude Config Manager
 
-[![npm](https://img.shields.io/npm/v/claude-config-manager.svg)](https://www.npmjs.com/package/claude-config-manager)
+[![npm](https://img.shields.io/npm/v/claude-config-ui.svg)](https://www.npmjs.com/package/claude-config-ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/node/v/claude-config-manager.svg)](#requirements)
+[![Node](https://img.shields.io/node/v/claude-config-ui.svg)](#requirements)
 
 A local, open-source UI for editing every Claude Code config file from one place — `settings.json`, `CLAUDE.md`, `.mcp.json`, subagents, slash commands, output styles, keybindings — plus a built-in **credentials manager** so you set GitHub / AWS / Vercel / Stripe / etc. once and they're available across every project.
 
 > Files saved by this tool land in Claude Code's standard locations. Claude Code picks them up automatically on the next session start. No daemons, no symlinks, no special integration step.
 
 ```bash
-npx claude-config-manager
+npx claude-config-ui
 ```
 
 That's it. The launcher picks a free port, opens your browser, and detects your OS-correct paths automatically. Press `Ctrl+C` to stop.
@@ -83,11 +83,13 @@ npm run dev
 ### Global install (skip `npx`)
 
 ```bash
-npm install -g claude-config-manager
-claude-config-manager
+npm install -g claude-config-ui
+claude-config-ui
 # or:
 ccm
 ```
+
+> The npm package is named `claude-config-ui` (the bare `claude-config-manager` was already taken). The GitHub repo keeps the `claude-config-manager` name.
 
 ---
 

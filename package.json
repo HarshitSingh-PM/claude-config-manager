@@ -1,5 +1,5 @@
 {
-  "name": "claude-config-manager",
+  "name": "claude-config-ui",
   "version": "0.1.0",
   "description": "Local, open-source UI for editing every Claude Code config file — settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
   "keywords": [
@@ -29,7 +29,7 @@
     "node": ">=20.9.0"
   },
   "bin": {
-    "claude-config-manager": "bin/start.js",
+    "claude-config-ui": "bin/start.js",
     "ccm": "bin/start.js"
   },
   "files": [

@@ -75,7 +75,7 @@ function printHeader(port) {
       `Could not find the bundled server at:\n  ${SERVER_JS}\n\n` +
         `This usually means the package was installed in a way that ` +
         `stripped its built files. Try:\n` +
-        `  npx claude-config-manager@latest\n`,
+        `  npx claude-config-ui@latest\n`,
     );
     process.exit(1);
   }
