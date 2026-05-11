@@ -6,6 +6,10 @@
 
 A local, open-source UI for editing every Claude Code config file from one place — `settings.json`, `CLAUDE.md`, `.mcp.json`, subagents, slash commands, output styles, keybindings — plus a built-in **credentials manager** so you set GitHub / AWS / Vercel / Stripe / etc. once and they're available across every project.
 
+
+
+
+
 > Files saved by this tool land in Claude Code's standard locations. Claude Code picks them up automatically on the next session start. No daemons, no symlinks, no special integration step.
 
 ```bash
