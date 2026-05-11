@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a new field, preset, template, or behavior.
+labels: ["feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the use case, not the proposed solution.
+      placeholder: |
+        I find myself manually editing ~/.claude/settings.json every time I onboard
+        a new project to add the same set of CLOUDFLARE_* env vars...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like the tool to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Have you tried any workarounds?
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This is a feature that benefits multiple Claude Code users, not just my specific setup
+        - label: I'm willing to open a PR if pointed in the right direction

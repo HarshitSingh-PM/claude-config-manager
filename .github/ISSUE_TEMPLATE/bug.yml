@@ -1,0 +1,51 @@
+name: Bug report
+description: Something is broken or behaving wrong.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what actually happened?
+      placeholder: |
+        Steps:
+        1. Open the Credentials tab
+        2. Toggle on AWS
+        3. ...
+
+        Expected: ...
+        Actual: ...
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS + version
+      placeholder: macOS 14.4 / Windows 11 / Ubuntu 22.04
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      description: Output of `node --version`
+      placeholder: v20.18.0
+    validations:
+      required: true
+  - type: input
+    id: ccm-version
+    attributes:
+      label: claude-config-manager version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: terminal
+    attributes:
+      label: Terminal output
+      description: Any errors from the terminal where you ran `npx claude-config-manager`. Paste verbatim.
+      render: shell
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?

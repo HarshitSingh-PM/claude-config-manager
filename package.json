@@ -1,0 +1,79 @@
+{
+  "name": "claude-config-manager",
+  "version": "0.1.0",
+  "description": "Local, open-source UI for editing every Claude Code config file — settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "config",
+    "settings",
+    "mcp",
+    "agents",
+    "developer-tools",
+    "cli",
+    "tui",
+    "manager"
+  ],
+  "license": "MIT",
+  "author": "Harshit Singh <singhharshit.pm@gmail.com>",
+  "homepage": "https://github.com/HarshitSingh-PM/claude-config-manager#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HarshitSingh-PM/claude-config-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HarshitSingh-PM/claude-config-manager/issues"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "bin": {
+    "claude-config-manager": "bin/start.js",
+    "ccm": "bin/start.js"
+  },
+  "files": [
+    "bin/",
+    ".next/standalone/",
+    ".next/static/",
+    "public/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:standalone": "next build && node scripts/pack-standalone.js",
+    "start": "next start",
+    "lint": "eslint",
+    "prepublishOnly": "npm run build:standalone",
+    "ccm": "node bin/start.js"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "js-yaml": "^4.1.1",
+    "lucide-react": "^1.14.0",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.6.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

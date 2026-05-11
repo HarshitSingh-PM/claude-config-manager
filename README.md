@@ -1,0 +1,167 @@
+# Claude Config Manager
+
+[![npm](https://img.shields.io/npm/v/claude-config-manager.svg)](https://www.npmjs.com/package/claude-config-manager)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/node/v/claude-config-manager.svg)](#requirements)
+
+A local, open-source UI for editing every Claude Code config file from one place — `settings.json`, `CLAUDE.md`, `.mcp.json`, subagents, slash commands, output styles, keybindings — plus a built-in **credentials manager** so you set GitHub / AWS / Vercel / Stripe / etc. once and they're available across every project.
+
+> Files saved by this tool land in Claude Code's standard locations. Claude Code picks them up automatically on the next session start. No daemons, no symlinks, no special integration step.
+
+```bash
+npx claude-config-manager
+```
+
+That's it. The launcher picks a free port, opens your browser, and detects your OS-correct paths automatically. Press `Ctrl+C` to stop.
+
+---
+
+## Why
+
+Claude Code reads config from 30+ possible files across user, project, project-local, and enterprise scopes. People learn the system by trial-and-error or by copy-pasting community gists. This tool turns that into a guided form.
+
+- **Auto-detected paths** — `~/.claude/` on macOS/Linux, `%APPDATA%\Claude\` on Windows, project paths from your repo, enterprise paths from `/Library/Application Support/ClaudeCode/` or `/etc/claude-code/`.
+- **Every field has a tooltip** explaining what it does AND why it matters.
+- **Community presets** baked in — Karpathy's 4-rules CLAUDE.md, HumanLayer's skeleton, Trail of Bits credential lockdown, popular hook recipes — drop them in with one click.
+- **Auto-backup** — every save writes a `*.bak-<timestamp>` next to the original. Nothing is lost.
+- **Autosave** — 1.2s debounce, smart backup policy that doesn't pollute your folder with hundreds of `.bak` files.
+- **Path sandbox** — the API refuses to read or write anything outside your home directory, current working directory, or known Claude Code enterprise dirs.
+- **Credentials catalog** — 28 services across cloud / deploy / SCM / databases / collaboration / AI / payments / email / observability. Set once at user scope, export to every project.
+
+---
+
+## The four scopes
+
+This mirrors how Claude Code actually resolves config:
+
+| Tab | What | Path |
+| --- | --- | --- |
+| **Global Claude** | Your personal user-level config (all projects) | `~/.claude/` |
+| **Global Project** | Team-shared project config (committed to git) | `<project>/.claude/` + `<project>/CLAUDE.md` + `<project>/.mcp.json` |
+| **Local Claude** | Personal overrides for one project (gitignored) | `<project>/.claude/settings.local.json` + `<project>/CLAUDE.local.md` |
+| **Project Local (Enterprise)** | Organization policy deployed by IT (highest precedence) | `/Library/Application Support/ClaudeCode/` (mac), `C:\Program Files\ClaudeCode\` (win), `/etc/claude-code/` (linux) |
+
+Precedence (lowest → highest, later wins): user → project shared → project local → enterprise.
+
+---
+
+## What it edits
+
+For each scope, the relevant files are surfaced as a sidebar list. Click one to edit:
+
+- **`settings.json`** — model, permissions (allow/deny/ask), hooks, status line, env, sandbox, telemetry, output style, theme.
+- **Credentials** *(Global Claude only)* — AWS, GCP, Azure, DigitalOcean, Cloudflare, Fly, Vercel, Netlify, Heroku, Railway, GitHub, GitLab, Bitbucket, Postgres, Supabase, Neon, MongoDB, Redis, Slack, Linear, Notion, Atlassian, OpenAI, Anthropic, Mistral, Hugging Face, Stripe, Resend, SendGrid, Sentry, Datadog — masked inputs, eye-toggles, deep links to where to get each token, written into the `env` block of `~/.claude/settings.json`.
+- **`CLAUDE.md`** (and `CLAUDE.local.md`) — markdown editor with line/char counts and 12 section templates (overview, stack, commands, structure, conventions, testing, architecture, hard rules, workflow, tooling, @imports, personal style). Plus four full-doc presets (Karpathy, HumanLayer, Trail of Bits, Minimal personal).
+- **`.mcp.json`** — list of MCP servers with type-specific fields (stdio command/args; http URL/headers; env, alwaysLoad).
+- **`keybindings.json`** — context-scoped key bindings (Chat / Global / Confirmation).
+- **`agents/`** — list view of subagent markdown files; edit frontmatter (name/description/model/effort/tools/isolation) + body. Templates: `code-reviewer`, `security-auditor`, `test-writer`, `debugger`, `docs-writer`.
+- **`commands/`** — slash commands. Templates: `/review`, `/commit`, `/tdd`, `/explore`, `/security-scan`.
+- **`output-styles/`** — frontmatter + body for tone presets. Templates: `terse`, `explanatory`, `pr-review-mode`.
+- **`managed-settings.json`** — enterprise policy.
+
+---
+
+## Requirements
+
+- Node.js 20.9 or newer
+- macOS, Windows, or Linux
+
+---
+
+## Alternative install paths
+
+### From source (for development or contributing)
+
+```bash
+git clone https://github.com/HarshitSingh-PM/claude-config-manager.git
+cd claude-config-manager
+npm install
+npm run dev
+# → http://localhost:3000
+```
+
+### Global install (skip `npx`)
+
+```bash
+npm install -g claude-config-manager
+claude-config-manager
+# or:
+ccm
+```
+
+---
+
+## Configuration
+
+Everything is auto-detected from your operating system. The only thing you set in the UI is the **project directory** for project-scoped tabs (defaults to wherever you launched the tool from). There's no `.env`, no config file, nothing to set up.
+
+To point at a different project, paste its absolute path into the project field at the top of the page.
+
+**Environment variables**:
+
+- `PORT` — override the default `3737`.
+- `CCM_NO_OPEN=1` — don't auto-open the browser on launch.
+
+---
+
+## How auto-detection works
+
+- **macOS / Linux**: `~/.claude/` for user scope; `/Library/Application Support/ClaudeCode/` or `/etc/claude-code/` for enterprise.
+- **Windows**: `%APPDATA%\Claude\` for user scope; `C:\Program Files\ClaudeCode\` for enterprise.
+- **Project**: any directory you point at. The tool reads existing files if present and creates them on save if not.
+
+The tool labels each file as `git-tracked` or `gitignored` in the editor so you always know which side of the `.gitignore` you're on.
+
+---
+
+## Safety
+
+- Every write makes a timestamped `.bak-*` copy of the existing file first (autosaves create only one `.bak` per file per session — escape valve is the manual Save button).
+- The file API refuses paths outside `~`, `cwd`, and known Claude Code enterprise directories.
+- Deleting a subagent or slash command also writes a backup before removing the original.
+- JSON output is pretty-printed with 2-space indent.
+- Markdown frontmatter is round-tripped via `js-yaml` (preserves keys, drops empties).
+- Credentials are written to the `env` block of `~/.claude/settings.json` — **plain text on disk**. Fine for personal-laptop API keys; for high-blast-radius prod secrets use Claude Code's `apiKeyHelper` instead (a shell command that fetches the value from your keychain at runtime).
+
+---
+
+## Stack
+
+- Next.js 16 (App Router, Turbopack, React 19.2) — standalone server output for npx
+- TypeScript strict
+- Tailwind CSS 4
+- Framer Motion (animations)
+- Radix UI Tooltip (accessible tooltips)
+- Lucide icons
+- `js-yaml` for frontmatter parsing
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md). The easiest contributions:
+
+- Add a new service to the Credentials catalog (`src/lib/credentialsCatalog.ts`)
+- Add a new CLAUDE.md section template (`src/lib/presets/claudemdSections.ts`)
+- Add a new subagent / slash command template (`src/lib/presets/agents.ts`, `commands.ts`)
+
+---
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
+
+---
+
+## Acknowledgements
+
+Schema and presets are drawn from:
+
+- Official Claude Code docs (docs.claude.com)
+- [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code)
+- [trailofbits/claude-code-config](https://github.com/trailofbits/claude-code-config)
+- [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents)
+- [wshobson/commands](https://github.com/wshobson/commands)
+- HumanLayer's "Writing a good CLAUDE.md"
+- Karpathy's trending CLAUDE.md gist
+- [disler/claude-code-hooks-mastery](https://github.com/disler/claude-code-hooks-mastery)
