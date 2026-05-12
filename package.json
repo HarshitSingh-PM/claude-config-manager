@@ -1,7 +1,7 @@
 {
   "name": "claude-config-ui",
   "version": "0.3.0",
-  "description": "Local, open-source UI for editing every Claude Code config file — settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
+  "description": "Local, open-source UI for editing every Claude Code config file \u2014 settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
   "keywords": [
     "claude",
     "claude-code",
@@ -50,12 +50,13 @@
     "prepublishOnly": "npm run build:standalone",
     "ccm": "node bin/start.js",
     "electron": "npm run build:standalone && electron .",
-    "dmg": "npm run build:standalone && electron-builder --mac dmg"
+    "dmg": "npm run build:standalone && electron-builder --mac dmg",
+    "exe": "npm run build:standalone && electron-builder --win nsis"
   },
   "build": {
     "appId": "dev.harshitsingh.claude-config-ui",
     "productName": "Claude Config",
-    "copyright": "© 2026 Harshit Singh — MIT",
+    "copyright": "\u00a9 2026 Harshit Singh \u2014 MIT",
     "directories": {
       "output": "dist-electron",
       "buildResources": "build"
@@ -104,6 +105,27 @@
         "width": 560,
         "height": 380
       }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "${productName}-${version}-${arch}-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Claude Config",
+      "deleteAppDataOnUninstall": false
     },
     "asar": true
   },

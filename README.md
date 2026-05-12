@@ -1,20 +1,31 @@
 # Claude Config Manager
 
 [![npm](https://img.shields.io/npm/v/claude-config-ui.svg)](https://www.npmjs.com/package/claude-config-ui)
+[![GitHub release](https://img.shields.io/github/v/release/HarshitSingh-PM/claude-config-manager?include_prereleases&label=mac%20app)](https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/node/v/claude-config-ui.svg)](#requirements)
 
 A local, open-source UI for editing every Claude Code config file from one place — `settings.json`, `CLAUDE.md`, `.mcp.json`, subagents, slash commands, output styles, keybindings — plus a built-in **credentials manager** so you set GitHub / AWS / Vercel / Stripe / etc. once and they're available across every project.
 
+<p align="center">
+  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for macOS — Apple Silicon" src="https://img.shields.io/badge/download-macOS%20Apple%20Silicon%20%E2%86%93-7c3aed?style=for-the-badge&logo=apple&logoColor=white"></a>
+  &nbsp;
+  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for macOS — Intel" src="https://img.shields.io/badge/download-macOS%20Intel%20%E2%86%93-6d28d9?style=for-the-badge&logo=apple&logoColor=white"></a>
+  &nbsp;
+  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for Windows" src="https://img.shields.io/badge/download-Windows%20%E2%86%93-5b21b6?style=for-the-badge&logo=windows&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <em>or, in any terminal:</em>&nbsp;&nbsp;<code>npx claude-config-ui</code>
+</p>
+
 <img width="800" height="387" alt="Image" src="https://github.com/user-attachments/assets/a88af615-a4d2-450e-bc11-6accd6644bf5" />
-
-
 
 > Files saved by this tool land in Claude Code's standard locations. Claude Code picks them up automatically on the next session start. No daemons, no symlinks, no special integration step.
 
 ## Install
 
-### Mac app (recommended on macOS)
+### Mac app
 
 Download from the [latest release](https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest):
 
@@ -24,6 +35,12 @@ Download from the [latest release](https://github.com/HarshitSingh-PM/claude-con
 Open the `.dmg`, drag **Claude Config** to **Applications**, launch from Spotlight or Launchpad.
 
 > **First launch (one time):** macOS Gatekeeper will block the unsigned app. **Right-click → Open** the first time, then click **Open** in the dialog. After that it launches normally. (Or run `xattr -dr com.apple.quarantine "/Applications/Claude Config.app"` once.)
+
+### Windows app
+
+Download `Claude-Config-X.Y.Z-x64-setup.exe` from the [latest release](https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest), run the installer, then launch **Claude Config** from the Start menu.
+
+> **First launch (one time):** Windows SmartScreen will block the unsigned installer. Click **More info** → **Run anyway**. Standard for indie/OSS apps without a code-signing certificate.
 
 ### Command-line (any OS)
 
@@ -157,16 +174,20 @@ The tool labels each file as `git-tracked` or `gitignored` in the editor so you 
 - `js-yaml` for frontmatter parsing
 - Electron (Mac `.dmg` distribution only — npm package is pure Node)
 
-## Building the Mac app yourself
+## Building desktop apps yourself
 
 ```bash
 npm install
-npm run dmg          # builds arm64 .dmg → dist-electron/
-# or for Intel Macs:
-npx electron-builder --mac dmg --x64
+npm run dmg          # macOS arm64 .dmg → dist-electron/
+npm run exe          # Windows x64 NSIS .exe → dist-electron/
+# explicit arch:
+npx electron-builder --mac dmg --x64       # Intel Mac .dmg
+npx electron-builder --win nsis --x64      # Windows x64 .exe
 ```
 
-Builds are unsigned by default. To sign for distribution, set `mac.identity` to your Apple Developer cert name in `package.json#build.mac` (and `mac.hardenedRuntime: true`).
+> **Cross-compiling to Windows from Apple Silicon Macs** needs Rosetta installed (electron-builder uses an x86_64 `wine64` binary to set the .exe's icon and version metadata). One-time setup: `sudo softwareupdate --install-rosetta --agree-to-license`.
+
+Builds are unsigned by default. To sign for distribution: set `mac.identity` to your Apple Developer cert name in `package.json#build.mac` (and flip `mac.hardenedRuntime` to `true`); for Windows, add `win.certificateFile` + `certificatePassword` (or use Azure SignTool).
 
 ---
 
