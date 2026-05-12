@@ -12,11 +12,26 @@ A local, open-source UI for editing every Claude Code config file from one place
 
 > Files saved by this tool land in Claude Code's standard locations. Claude Code picks them up automatically on the next session start. No daemons, no symlinks, no special integration step.
 
+## Install
+
+### Mac app (recommended on macOS)
+
+Download from the [latest release](https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest):
+
+- **`Claude Config-X.Y.Z-arm64.dmg`** — Apple Silicon (M1 / M2 / M3 / M4 Macs, 2020+)
+- **`Claude Config-X.Y.Z-x64.dmg`** — Intel Macs (2019 and earlier)
+
+Open the `.dmg`, drag **Claude Config** to **Applications**, launch from Spotlight or Launchpad.
+
+> **First launch (one time):** macOS Gatekeeper will block the unsigned app. **Right-click → Open** the first time, then click **Open** in the dialog. After that it launches normally. (Or run `xattr -dr com.apple.quarantine "/Applications/Claude Config.app"` once.)
+
+### Command-line (any OS)
+
 ```bash
 npx claude-config-ui
 ```
 
-That's it. The launcher picks a free port, opens your browser, and detects your OS-correct paths automatically. Press `Ctrl+C` to stop.
+The launcher picks a free port, opens your browser, and detects your OS-correct paths automatically. Press `Ctrl+C` to stop.
 
 ---
 
@@ -140,6 +155,18 @@ The tool labels each file as `git-tracked` or `gitignored` in the editor so you 
 - Radix UI Tooltip (accessible tooltips)
 - Lucide icons
 - `js-yaml` for frontmatter parsing
+- Electron (Mac `.dmg` distribution only — npm package is pure Node)
+
+## Building the Mac app yourself
+
+```bash
+npm install
+npm run dmg          # builds arm64 .dmg → dist-electron/
+# or for Intel Macs:
+npx electron-builder --mac dmg --x64
+```
+
+Builds are unsigned by default. To sign for distribution, set `mac.identity` to your Apple Developer cert name in `package.json#build.mac` (and `mac.hardenedRuntime: true`).
 
 ---
 

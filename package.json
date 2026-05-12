@@ -1,6 +1,6 @@
 {
   "name": "claude-config-ui",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Local, open-source UI for editing every Claude Code config file — settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
   "keywords": [
     "claude",
@@ -40,6 +40,7 @@
     "README.md",
     "LICENSE"
   ],
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -47,7 +48,64 @@
     "start": "next start",
     "lint": "eslint",
     "prepublishOnly": "npm run build:standalone",
-    "ccm": "node bin/start.js"
+    "ccm": "node bin/start.js",
+    "electron": "npm run build:standalone && electron .",
+    "dmg": "npm run build:standalone && electron-builder --mac dmg"
+  },
+  "build": {
+    "appId": "dev.harshitsingh.claude-config-ui",
+    "productName": "Claude Config",
+    "copyright": "© 2026 Harshit Singh — MIT",
+    "directories": {
+      "output": "dist-electron",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "!**/*.{md,bak}"
+    ],
+    "afterPack": "build/afterPack.js",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.icns",
+      "darkModeSupport": true,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "identity": null,
+      "type": "distribution",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "${productName} ${version}",
+      "icon": "build/icon.icns",
+      "iconSize": 110,
+      "contents": [
+        {
+          "x": 140,
+          "y": 220,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 560,
+        "height": 380
+      }
+    },
+    "asar": true
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -71,6 +129,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",

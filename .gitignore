@@ -17,9 +17,6 @@
 /.next/
 /out/
 
-# production
-/build
-
 # misc
 .DS_Store
 *.pem
@@ -42,3 +39,7 @@ next-env.d.ts
 *.bak-*
 
 # Test artifacts and user backups produced by this tool
+
+# Electron build artifacts
+/dist-electron
+/build/icon.iconset
