@@ -140,6 +140,32 @@ export const credentialServices: CredentialService[] = [
     ],
   },
   {
+    id: "npm",
+    name: "npm",
+    category: "deploy",
+    description: "npm registry auth token for `npm publish` and private-package installs.",
+    docsUrl: "https://www.npmjs.com/settings/~/tokens",
+    vars: [
+      {
+        name: "NPM_TOKEN",
+        label: "Auth token",
+        description:
+          "Granular access token. Use 'Publish' scope for releases; 'Read-only' for CI installs. Reference in .npmrc as ${NPM_TOKEN}.",
+        sensitive: true,
+        required: true,
+        placeholder: "npm_…",
+      },
+      {
+        name: "NPM_CONFIG_REGISTRY",
+        label: "Registry URL",
+        description:
+          "Override default registry (e.g. for GitHub Packages, JFrog, Verdaccio). Leave empty for npmjs.org.",
+        sensitive: false,
+        placeholder: "https://registry.npmjs.org/",
+      },
+    ],
+  },
+  {
     id: "heroku",
     name: "Heroku",
     category: "deploy",

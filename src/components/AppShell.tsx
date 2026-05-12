@@ -19,6 +19,8 @@ import {
   CodeSquare,
   Zap,
   KeyRound,
+  TerminalSquare,
+  Wrench,
 } from "lucide-react";
 import { tabs, type TabDef, type TabFile } from "@/lib/tabs";
 import type { Scope, FileTarget } from "@/lib/paths";
@@ -30,6 +32,8 @@ import { McpForm } from "./forms/McpForm";
 import { KeybindingsForm } from "./forms/KeybindingsForm";
 import { DirEditor } from "./forms/DirEditor";
 import { CredentialsForm } from "./forms/CredentialsForm";
+import { StatusLineForm } from "./forms/StatusLineForm";
+import { BuildShell } from "./BuildShell";
 import { InfoIcon, Tooltip } from "./Tooltip";
 
 type PathsInfo = {
@@ -64,6 +68,7 @@ const tabIcons: Record<Scope, React.ReactNode> = {
 const fileTypeIcons: Record<TabFile["type"], React.ReactNode> = {
   settings: <SettingsIcon size={13} />,
   credentials: <KeyRound size={13} />,
+  statusline: <TerminalSquare size={13} />,
   claudemd: <FileText size={13} />,
   mcp: <ServerCog size={13} />,
   keybindings: <Keyboard size={13} />,
@@ -75,6 +80,7 @@ const fileTypeIcons: Record<TabFile["type"], React.ReactNode> = {
 export function AppShell() {
   const [paths, setPaths] = useState<PathsInfo | null>(null);
   const [projectDir, setProjectDir] = useState<string>("");
+  const [view, setView] = useState<"config" | "build">("config");
   const [activeTab, setActiveTab] = useState<Scope>("user");
   const [activeFileIds, setActiveFileIds] = useState<Record<Scope, string>>({
     user: "user.settings",
@@ -313,20 +319,52 @@ export function AppShell() {
                 Local, open-source UI for Claude Code config files.
               </p>
             </div>
+
+            {/* ─── Primary nav: Config vs Build ─────────────── */}
+            <div className="ml-3 inline-flex items-center bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-lg p-0.5 relative">
+              {(["config", "build"] as const).map((v) => {
+                const active = view === v;
+                const Icon = v === "config" ? SettingsIcon : Wrench;
+                return (
+                  <button
+                    key={v}
+                    onClick={() => setView(v)}
+                    className="relative px-3 py-1 text-xs font-medium inline-flex items-center gap-1.5 z-10"
+                  >
+                    {active && (
+                      <motion.div
+                        layoutId="primary-nav-pill"
+                        className="absolute inset-0 bg-[color:var(--accent)] rounded-md"
+                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                    <span
+                      className={`relative inline-flex items-center gap-1.5 ${
+                        active ? "text-black" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
+                      }`}
+                    >
+                      <Icon size={12} />
+                      {v === "config" ? "Config" : "Build"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div className="flex items-center gap-4">
-            {paths && (
+            {view === "config" && paths && (
               <span className="text-[11px] text-[color:var(--fg-muted)] inline-flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--success)]" />
                 Detected: <span className="font-mono">{paths.os.pretty}</span>
               </span>
             )}
-            {dirtyCount > 0 && (
+            {view === "config" && dirtyCount > 0 && (
               <span className="text-[11px] text-[color:var(--warning)] inline-flex items-center gap-1.5">
                 <AlertTriangle size={11} />
                 {dirtyCount} unsaved
               </span>
             )}
+            {view === "config" && (
             <Tooltip
               content={
                 <>
@@ -364,6 +402,7 @@ export function AppShell() {
                 <Toggle checked={autosave} onChange={setAutosave} />
               </button>
             </Tooltip>
+            )}
             <a
               href="https://github.com"
               target="_blank"
@@ -377,6 +416,9 @@ export function AppShell() {
       </header>
 
       <main className="flex-1">
+        {view === "build" ? (
+          <BuildShell />
+        ) : (
         <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-5">
           {/* ─── Project picker ────────────────────────────── */}
           <Card className="p-4 flex flex-wrap items-center gap-3">
@@ -525,6 +567,13 @@ export function AppShell() {
                   reloadKey={reloadKey}
                   onSaved={() => setToast({ kind: "ok", msg: `Saved to ${target.absolutePath}` })}
                 />
+              ) : target.format === "shell" && currentFile.type === "statusline" ? (
+                <StatusLineForm
+                  scriptPath={target.absolutePath}
+                  settingsPath={paths!.targets["user.settings"].absolutePath}
+                  onSaved={(msg) => setToast({ kind: "ok", msg })}
+                  onError={(msg) => setToast({ kind: "err", msg })}
+                />
               ) : (
                 <>
                   <FileHeader
@@ -557,6 +606,7 @@ export function AppShell() {
 
           <StartupHelper />
         </div>
+        )}
       </main>
 
       {/* ─── Toast ──────────────────────────────────────────── */}

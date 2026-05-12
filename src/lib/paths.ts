@@ -31,7 +31,7 @@ export type FileTarget = {
   scope: Scope;
   label: string;
   absolutePath: string;
-  format: "json" | "markdown" | "directory";
+  format: "json" | "markdown" | "directory" | "shell";
   gitTracked: boolean;
   description: string;
 };
@@ -70,6 +70,16 @@ export function resolveTargets(projectDir: string | null): Record<string, FileTa
       format: "json",
       gitTracked: false,
       description: "Custom keyboard shortcuts inside Claude Code.",
+    },
+    {
+      id: "user.statusline",
+      scope: "user",
+      label: "statusline.sh",
+      absolutePath: path.join(u, "statusline.sh"),
+      format: "shell",
+      gitTracked: false,
+      description:
+        "Shell script rendered at the bottom of every prompt. Built from widgets in the UI; saving also wires settings.json statusLine.command to point here.",
     },
     {
       id: "user.agents",
@@ -174,16 +184,6 @@ export function resolveTargets(projectDir: string | null): Record<string, FileTa
       gitTracked: false,
       description: "Personal project notes (debugging tricks, local URLs). NOT committed.",
     },
-    {
-      id: "projectLocal.mcp",
-      scope: "project-local",
-      label: ".claude.json (local MCP)",
-      absolutePath: path.join(os.homedir(), ".claude.json"),
-      format: "json",
-      gitTracked: false,
-      description: "Local-scoped MCP servers stored in your home directory, keyed by project path.",
-    },
-
     // ───── Enterprise (Tab 4: Enterprise, IT-managed) ─────
     {
       id: "enterprise.managedSettings",

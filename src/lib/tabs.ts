@@ -3,6 +3,7 @@ import type { Scope } from "./paths";
 export type TabFileType =
   | "settings"
   | "credentials"
+  | "statusline"
   | "claudemd"
   | "mcp"
   | "keybindings"
@@ -41,6 +42,7 @@ export const tabs: TabDef[] = [
         label: "Credentials",
         fileTargetId: "user.settings",
       },
+      { id: "user.statusline", type: "statusline", label: "Status line" },
       { id: "user.claudemd", type: "claudemd", label: "CLAUDE.md" },
       { id: "user.keybindings", type: "keybindings", label: "keybindings.json" },
       { id: "user.agents", type: "agents-dir", label: "agents/" },
