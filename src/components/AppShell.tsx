@@ -32,6 +32,7 @@ import { ClaudeMdForm } from "./forms/ClaudeMdForm";
 import { McpForm } from "./forms/McpForm";
 import { KeybindingsForm } from "./forms/KeybindingsForm";
 import { DirEditor } from "./forms/DirEditor";
+import { SkillsDirEditor } from "./forms/SkillsDirEditor";
 import { CredentialsForm } from "./forms/CredentialsForm";
 import { StatusLineForm } from "./forms/StatusLineForm";
 import { BuildShell } from "./BuildShell";
@@ -77,6 +78,7 @@ const fileTypeIcons: Record<TabFile["type"], React.ReactNode> = {
   "agents-dir": <Layers size={13} />,
   "commands-dir": <Layers size={13} />,
   "output-styles-dir": <Layers size={13} />,
+  "skills-dir": <Sparkles size={13} />,
 };
 
 export function AppShell() {
@@ -96,6 +98,9 @@ export function AppShell() {
   const [fileStates, setFileStates] = useState<Record<string, FileState>>({});
   const [reloadKey, setReloadKey] = useState(0);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  // Deep-link from Library: when set, the next DirEditor / SkillsDirEditor
+  // render uses this as the initially-selected child.
+  const [initialChild, setInitialChild] = useState<string | null>(null);
   const [autosave, setAutosaveState] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(AUTOSAVE_STORAGE_KEY) === "1";
@@ -426,18 +431,20 @@ export function AppShell() {
           <LibraryShell
             projectDir={projectDir}
             onOpenInConfig={(targetId, fileName) => {
-              // Find which tab this target belongs to and select it
               const tab = tabs.find((t) => t.files.some((f) => (f.fileTargetId ?? f.id) === targetId));
               const file = tab?.files.find((f) => (f.fileTargetId ?? f.id) === targetId);
               if (tab && file) {
                 setView("config");
                 setActiveTab(tab.id);
                 setActiveFileIds((prev) => ({ ...prev, [tab.id]: file.id }));
-                // The DirEditor opens with the first .md in the directory by default;
-                // it doesn't currently take an "open this child" prop. Surfacing that
-                // would need another small wiring step. For now we land on the right
-                // dir-tab and the user picks the file. (Skill detail open is a follow-up.)
-                void fileName;
+                // For skill rows, fileName looks like "code-review/SKILL.md" —
+                // strip the trailing "/SKILL.md" so SkillsDirEditor gets just
+                // the subdir name. DirEditor expects a bare filename.
+                const child = fileName.endsWith("/SKILL.md")
+                  ? fileName.replace(/\/SKILL\.md$/, "")
+                  : fileName;
+                setInitialChild(child);
+                setReloadKey((k) => k + 1);
               }
             }}
           />
@@ -583,12 +590,26 @@ export function AppShell() {
                 <Card className="p-10 text-center text-xs text-[color:var(--fg-muted)]">
                   Loading…
                 </Card>
+              ) : target.format === "directory" && currentFile.type === "skills-dir" ? (
+                <SkillsDirEditor
+                  dirPath={target.absolutePath}
+                  reloadKey={reloadKey}
+                  initialActiveSkill={initialChild}
+                  onSaved={() => {
+                    setToast({ kind: "ok", msg: `Saved to ${target.absolutePath}` });
+                    setInitialChild(null);
+                  }}
+                />
               ) : target.format === "directory" ? (
                 <DirEditor
                   dirPath={target.absolutePath}
                   kind={currentFile.type as "agents-dir" | "commands-dir" | "output-styles-dir"}
                   reloadKey={reloadKey}
-                  onSaved={() => setToast({ kind: "ok", msg: `Saved to ${target.absolutePath}` })}
+                  initialActiveFile={initialChild}
+                  onSaved={() => {
+                    setToast({ kind: "ok", msg: `Saved to ${target.absolutePath}` });
+                    setInitialChild(null);
+                  }}
                 />
               ) : target.format === "shell" && currentFile.type === "statusline" ? (
                 <StatusLineForm

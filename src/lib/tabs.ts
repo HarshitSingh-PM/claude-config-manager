@@ -9,7 +9,8 @@ export type TabFileType =
   | "keybindings"
   | "agents-dir"
   | "commands-dir"
-  | "output-styles-dir";
+  | "output-styles-dir"
+  | "skills-dir";
 
 export type TabFile = {
   id: string; // sidebar-unique id
@@ -47,6 +48,7 @@ export const tabs: TabDef[] = [
       { id: "user.keybindings", type: "keybindings", label: "keybindings.json" },
       { id: "user.agents", type: "agents-dir", label: "agents/" },
       { id: "user.commands", type: "commands-dir", label: "commands/" },
+      { id: "user.skills", type: "skills-dir", label: "skills/" },
       { id: "user.outputStyles", type: "output-styles-dir", label: "output-styles/" },
     ],
   },
@@ -62,6 +64,7 @@ export const tabs: TabDef[] = [
       { id: "project.mcp", type: "mcp", label: ".mcp.json" },
       { id: "project.agents", type: "agents-dir", label: ".claude/agents/" },
       { id: "project.commands", type: "commands-dir", label: ".claude/commands/" },
+      { id: "project.skills", type: "skills-dir", label: ".claude/skills/" },
       { id: "project.outputStyles", type: "output-styles-dir", label: ".claude/output-styles/" },
     ],
   },

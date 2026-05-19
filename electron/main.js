@@ -7,11 +7,82 @@ const { app, BrowserWindow, shell, Menu } = require("electron");
 const { spawn } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs");
+const os = require("node:os");
 const net = require("node:net");
 
 let serverProcess = null;
 let serverPort = null;
 let mainWindow = null;
+
+// PID file: holds the spawned server's PID. If the parent is force-killed,
+// the child becomes an orphan. On next launch we read this file and try to
+// reap whatever's still alive before starting fresh.
+const PID_FILE = path.join(os.tmpdir(), "claude-config-ui.server.pid");
+
+function reapStaleChild() {
+  try {
+    if (!fs.existsSync(PID_FILE)) return;
+    const raw = fs.readFileSync(PID_FILE, "utf8").trim();
+    const pid = Number(raw);
+    if (!Number.isFinite(pid) || pid <= 1) return;
+    try {
+      // Probe — sending signal 0 throws if process doesn't exist
+      process.kill(pid, 0);
+      // It's alive — kill it
+      try {
+        process.kill(pid, "SIGTERM");
+      } catch {
+        /* ignore */
+      }
+      // Give it a moment, then SIGKILL if still around
+      setTimeout(() => {
+        try {
+          process.kill(pid, 0);
+          process.kill(pid, "SIGKILL");
+        } catch {
+          /* gone */
+        }
+      }, 500);
+    } catch {
+      // Already dead
+    }
+  } catch {
+    /* ignore */
+  } finally {
+    try {
+      fs.unlinkSync(PID_FILE);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+function writePidFile(pid) {
+  try {
+    fs.writeFileSync(PID_FILE, String(pid));
+  } catch {
+    /* not fatal */
+  }
+}
+
+function clearPidFile() {
+  try {
+    fs.unlinkSync(PID_FILE);
+  } catch {
+    /* ignore */
+  }
+}
+
+function killServer() {
+  if (!serverProcess) return;
+  try {
+    serverProcess.kill("SIGTERM");
+  } catch {
+    /* ignore */
+  }
+  serverProcess = null;
+  clearPidFile();
+}
 
 // In a packaged app, app.isPackaged is true and standalone lives in
 // Resources/standalone (set by electron-builder extraResources). In dev,
@@ -57,6 +128,9 @@ async function waitForServer(port, timeoutMs = 30000) {
 
 // ─── Start the bundled Next.js server ─────────────────────────
 async function startServer() {
+  // First: clean up anything left behind by a previous force-killed instance.
+  reapStaleChild();
+
   const serverJs = resolveServerJs();
   if (!fs.existsSync(serverJs)) {
     throw new Error(
@@ -79,8 +153,11 @@ async function startServer() {
     stdio: process.env.CCM_DEBUG === "1" ? "inherit" : "ignore",
   });
 
+  writePidFile(serverProcess.pid);
+
   serverProcess.on("exit", (code) => {
     serverProcess = null;
+    clearPidFile();
     if (code !== 0 && code !== null) {
       console.error(`Next.js server exited unexpectedly (code ${code})`);
     }
@@ -229,15 +306,18 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("before-quit", () => {
-  if (serverProcess) {
-    try {
-      serverProcess.kill();
-    } catch {
-      /* ignore */
-    }
-  }
-});
+app.on("before-quit", killServer);
+app.on("will-quit", killServer);
+
+// Catch every catchable signal — best-effort cleanup before death.
+for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+  process.on(sig, () => {
+    killServer();
+    app.quit();
+  });
+}
+// Node process exit (e.g. uncaught exception path)
+process.on("exit", killServer);
 
 // Single-instance lock — don't launch twice
 const gotLock = app.requestSingleInstanceLock();

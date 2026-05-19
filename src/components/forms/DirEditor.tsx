@@ -58,11 +58,14 @@ export function DirEditor({
   dirPath,
   kind,
   reloadKey,
+  initialActiveFile,
   onSaved,
 }: {
   dirPath: string;
   kind: Kind;
   reloadKey: number;
+  /** When set (e.g. from Library deep-link), select this file on first load. */
+  initialActiveFile?: string | null;
   onSaved: () => void;
 }) {
   const schema = schemaFor[kind];
@@ -89,7 +92,10 @@ export function DirEditor({
           .map((e: { name: string }) => e.name) as string[];
         setFiles(md.sort());
         if (md.length && !active) {
-          setActive(md[0]);
+          // Prefer the deep-link target if it actually exists in this dir.
+          const preferred =
+            initialActiveFile && md.includes(initialActiveFile) ? initialActiveFile : md[0];
+          setActive(preferred);
         }
       } else {
         setFiles([]);
@@ -99,7 +105,7 @@ export function DirEditor({
     return () => {
       cancelled = true;
     };
-  }, [dirPath, reloadKey, active]);
+  }, [dirPath, reloadKey, active, initialActiveFile]);
 
   // Load active file
   useEffect(() => {
