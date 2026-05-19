@@ -21,6 +21,7 @@ import {
   KeyRound,
   TerminalSquare,
   Wrench,
+  Library,
 } from "lucide-react";
 import { tabs, type TabDef, type TabFile } from "@/lib/tabs";
 import type { Scope, FileTarget } from "@/lib/paths";
@@ -34,6 +35,7 @@ import { DirEditor } from "./forms/DirEditor";
 import { CredentialsForm } from "./forms/CredentialsForm";
 import { StatusLineForm } from "./forms/StatusLineForm";
 import { BuildShell } from "./BuildShell";
+import { LibraryShell } from "./LibraryShell";
 import { InfoIcon, Tooltip } from "./Tooltip";
 
 type PathsInfo = {
@@ -80,7 +82,7 @@ const fileTypeIcons: Record<TabFile["type"], React.ReactNode> = {
 export function AppShell() {
   const [paths, setPaths] = useState<PathsInfo | null>(null);
   const [projectDir, setProjectDir] = useState<string>("");
-  const [view, setView] = useState<"config" | "build">("config");
+  const [view, setView] = useState<"config" | "build" | "library">("config");
   const [activeTab, setActiveTab] = useState<Scope>("user");
   const [activeFileIds, setActiveFileIds] = useState<Record<Scope, string>>({
     user: "user.settings",
@@ -320,11 +322,13 @@ export function AppShell() {
               </p>
             </div>
 
-            {/* ─── Primary nav: Config vs Build ─────────────── */}
+            {/* ─── Primary nav: Config / Build / Library ─────── */}
             <div className="ml-3 inline-flex items-center bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-lg p-0.5 relative">
-              {(["config", "build"] as const).map((v) => {
+              {(["config", "build", "library"] as const).map((v) => {
                 const active = view === v;
-                const Icon = v === "config" ? SettingsIcon : Wrench;
+                const Icon =
+                  v === "config" ? SettingsIcon : v === "build" ? Wrench : Library;
+                const label = v === "config" ? "Config" : v === "build" ? "Build" : "Library";
                 return (
                   <button
                     key={v}
@@ -344,7 +348,7 @@ export function AppShell() {
                       }`}
                     >
                       <Icon size={12} />
-                      {v === "config" ? "Config" : "Build"}
+                      {label}
                     </span>
                   </button>
                 );
@@ -418,6 +422,25 @@ export function AppShell() {
       <main className="flex-1">
         {view === "build" ? (
           <BuildShell />
+        ) : view === "library" ? (
+          <LibraryShell
+            projectDir={projectDir}
+            onOpenInConfig={(targetId, fileName) => {
+              // Find which tab this target belongs to and select it
+              const tab = tabs.find((t) => t.files.some((f) => (f.fileTargetId ?? f.id) === targetId));
+              const file = tab?.files.find((f) => (f.fileTargetId ?? f.id) === targetId);
+              if (tab && file) {
+                setView("config");
+                setActiveTab(tab.id);
+                setActiveFileIds((prev) => ({ ...prev, [tab.id]: file.id }));
+                // The DirEditor opens with the first .md in the directory by default;
+                // it doesn't currently take an "open this child" prop. Surfacing that
+                // would need another small wiring step. For now we land on the right
+                // dir-tab and the user picks the file. (Skill detail open is a follow-up.)
+                void fileName;
+              }
+            }}
+          />
         ) : (
         <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-5">
           {/* ─── Project picker ────────────────────────────── */}

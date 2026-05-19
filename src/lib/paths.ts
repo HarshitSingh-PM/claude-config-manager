@@ -108,6 +108,15 @@ export function resolveTargets(projectDir: string | null): Record<string, FileTa
       gitTracked: false,
       description: "Custom output styles to change Claude's tone or response format.",
     },
+    {
+      id: "user.skills",
+      scope: "user",
+      label: "skills/",
+      absolutePath: path.join(u, "skills"),
+      format: "directory",
+      gitTracked: false,
+      description: "User-level skills (each is a directory with a SKILL.md inside). Newer pattern; preferred over commands/.",
+    },
 
     // ───── Project shared (Tab 2: Global Project, committed) ─────
     {
@@ -163,6 +172,15 @@ export function resolveTargets(projectDir: string | null): Record<string, FileTa
       format: "directory",
       gitTracked: true,
       description: "Project output styles, shared with the team.",
+    },
+    {
+      id: "project.skills",
+      scope: "project-shared",
+      label: ".claude/skills/",
+      absolutePath: pj && path.join(pj, "skills"),
+      format: "directory",
+      gitTracked: true,
+      description: "Project skills (each is a directory with a SKILL.md inside), shared with the team.",
     },
 
     // ───── Project local (Tab 3: Project Local, gitignored) ─────

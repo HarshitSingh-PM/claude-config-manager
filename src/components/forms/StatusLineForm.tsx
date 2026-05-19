@@ -159,7 +159,9 @@ export function StatusLineForm({ scriptPath, settingsPath, onSaved, onError }: P
         return;
       }
 
-      // 2. Update settings.json statusLine
+      // 2. Update settings.json statusLine. We invoke via `bash <path>` so the
+      // script doesn't need a +x bit (the file API can't chmod), and so that
+      // Claude Code's command parsing is unambiguous across versions.
       const settingsRes = await fetch(
         `/api/file?path=${encodeURIComponent(settingsPath)}`,
       ).then((r) => r.json());
@@ -168,7 +170,7 @@ export function StatusLineForm({ scriptPath, settingsPath, onSaved, onError }: P
       );
       const newStatusLine: Record<string, unknown> = {
         type: "command",
-        command: scriptPath,
+        command: `bash ${scriptPath}`,
       };
       if (config.refreshInterval) newStatusLine.refreshInterval = config.refreshInterval;
       if (config.padding) newStatusLine.padding = config.padding;
@@ -188,8 +190,9 @@ export function StatusLineForm({ scriptPath, settingsPath, onSaved, onError }: P
         return;
       }
 
-      // Need chmod +x — file API doesn't do that. Tell the user.
-      onSaved(`Saved ${scriptPath} + wired settings.json. Run: chmod +x ${scriptPath}`);
+      onSaved(
+        `Saved. Restart Claude Code (or start a fresh session) to see the new status line.`,
+      );
       setLoadedConfig(config);
       setExists(true);
       setCurrentStatusLine(newStatusLine);
@@ -391,7 +394,11 @@ function pointsAtScript(
 ): boolean {
   if (!current) return false;
   if (current.type !== "command") return false;
-  if (current.command !== scriptPath) return false;
+  // Accept either form: "bash <path>" (what we write) OR bare "<path>" (legacy).
+  const cmd = (current.command ?? "").trim();
+  const matchesBash = cmd === `bash ${scriptPath}` || cmd === `bash "${scriptPath}"`;
+  const matchesBare = cmd === scriptPath;
+  if (!matchesBash && !matchesBare) return false;
   if (refreshInterval !== undefined) {
     if ((current as { refreshInterval?: number }).refreshInterval !== refreshInterval) return false;
   }

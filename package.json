@@ -1,7 +1,7 @@
 {
   "name": "claude-config-ui",
-  "version": "0.3.0",
-  "description": "Local, open-source UI for editing every Claude Code config file \u2014 settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
+  "version": "0.4.0",
+  "description": "Local, open-source UI for editing every Claude Code config file — settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
   "keywords": [
     "claude",
     "claude-code",
@@ -56,7 +56,7 @@
   "build": {
     "appId": "dev.harshitsingh.claude-config-ui",
     "productName": "Claude Config",
-    "copyright": "\u00a9 2026 Harshit Singh \u2014 MIT",
+    "copyright": "© 2026 Harshit Singh — MIT",
     "directories": {
       "output": "dist-electron",
       "buildResources": "build"

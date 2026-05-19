@@ -207,13 +207,16 @@ echo "🔥 \\$\${RATE}/hr"`,
     category: "quota",
     preview: "5h ▓▓░░░░░░░░ 23% → 14:30",
     deps: ["jq"],
-    shell: `read P R < <(printf '%s' "$INPUT" | jq -r '"\\(.rate_limits.five_hour.used_percentage // -1) \\(.rate_limits.five_hour.resets_at // empty)"')
-[ "$P" = "-1" ] && exit 0
+    // Two separate jq calls — using \\(... // empty) inside a single string
+    // template silently suppresses the WHOLE output, defeating the guard.
+    shell: `P=$(printf '%s' "$INPUT" | jq -r '.rate_limits.five_hour.used_percentage // "skip"')
+[ "$P" = "skip" ] || [ "$P" = "null" ] && exit 0
+R=$(printf '%s' "$INPUT" | jq -r '.rate_limits.five_hour.resets_at // ""')
 P=$(printf '%.0f' "$P")
 FILLED=$((P/10)); EMPTY=$((10-FILLED))
 BAR=$(printf '%*s' "$FILLED" | tr ' ' '▓')$(printf '%*s' "$EMPTY" | tr ' ' '░')
 RT=""
-[ -n "$R" ] && RT=" → $(date -r "$R" +%H:%M 2>/dev/null || date -d "@$R" +%H:%M 2>/dev/null)"
+[ -n "$R" ] && [ "$R" != "null" ] && RT=" → $(date -r "$R" +%H:%M 2>/dev/null || date -d "@$R" +%H:%M 2>/dev/null)"
 echo "5h $BAR \${P}%\${RT}"`,
   },
   {
@@ -223,13 +226,14 @@ echo "5h $BAR \${P}%\${RT}"`,
     category: "quota",
     preview: "7d ▓▓▓▓▓░░░░░ 51% → Mon",
     deps: ["jq"],
-    shell: `read P R < <(printf '%s' "$INPUT" | jq -r '"\\(.rate_limits.seven_day.used_percentage // -1) \\(.rate_limits.seven_day.resets_at // empty)"')
-[ "$P" = "-1" ] && exit 0
+    shell: `P=$(printf '%s' "$INPUT" | jq -r '.rate_limits.seven_day.used_percentage // "skip"')
+[ "$P" = "skip" ] || [ "$P" = "null" ] && exit 0
+R=$(printf '%s' "$INPUT" | jq -r '.rate_limits.seven_day.resets_at // ""')
 P=$(printf '%.0f' "$P")
 FILLED=$((P/10)); EMPTY=$((10-FILLED))
 BAR=$(printf '%*s' "$FILLED" | tr ' ' '▓')$(printf '%*s' "$EMPTY" | tr ' ' '░')
 RT=""
-[ -n "$R" ] && RT=" → $(date -r "$R" +%a 2>/dev/null || date -d "@$R" +%a 2>/dev/null)"
+[ -n "$R" ] && [ "$R" != "null" ] && RT=" → $(date -r "$R" +%a 2>/dev/null || date -d "@$R" +%a 2>/dev/null)"
 echo "7d $BAR \${P}%\${RT}"`,
   },
 
