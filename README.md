@@ -97,6 +97,19 @@ For each scope, the relevant files are surfaced as a sidebar list. Click one to 
 
 ---
 
+## Projects
+
+The **Projects** tab gives you a bird's-eye view of every project on your machine that uses Claude — discovered by scanning your common code roots (`~`, `~/projects`, `~/Developer`, `~/Documents`, …) and decoding the working directories of your recent Claude Code sessions (`~/.claude/projects/`). Projects you've actually used with Claude are flagged and sorted to the top by recency.
+
+Pick a project and edit its project-level local files inline, all in one place:
+
+- `CLAUDE.md` · `CLAUDE.local.md` · `summary.md` · `AGENTS.md`
+- `.claude/settings.json` · `.claude/settings.local.json` · `.mcp.json`
+
+Files that don't exist yet show a **new** badge — create them from a template or blank in one click. Every save still writes a timestamped `.bak`, and the same path sandbox applies.
+
+---
+
 ## Requirements
 
 - Node.js 20.9 or newer
