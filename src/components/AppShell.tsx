@@ -22,6 +22,7 @@ import {
   TerminalSquare,
   Wrench,
   Library,
+  FolderGit2,
 } from "lucide-react";
 import { tabs, type TabDef, type TabFile } from "@/lib/tabs";
 import type { Scope, FileTarget } from "@/lib/paths";
@@ -37,6 +38,7 @@ import { CredentialsForm } from "./forms/CredentialsForm";
 import { StatusLineForm } from "./forms/StatusLineForm";
 import { BuildShell } from "./BuildShell";
 import { LibraryShell } from "./LibraryShell";
+import { ProjectsShell } from "./ProjectsShell";
 import { InfoIcon, Tooltip } from "./Tooltip";
 
 type PathsInfo = {
@@ -84,7 +86,7 @@ const fileTypeIcons: Record<TabFile["type"], React.ReactNode> = {
 export function AppShell() {
   const [paths, setPaths] = useState<PathsInfo | null>(null);
   const [projectDir, setProjectDir] = useState<string>("");
-  const [view, setView] = useState<"config" | "build" | "library">("config");
+  const [view, setView] = useState<"config" | "build" | "library" | "projects">("config");
   const [activeTab, setActiveTab] = useState<Scope>("user");
   const [activeFileIds, setActiveFileIds] = useState<Record<Scope, string>>({
     user: "user.settings",
@@ -329,11 +331,24 @@ export function AppShell() {
 
             {/* ─── Primary nav: Config / Build / Library ─────── */}
             <div className="ml-3 inline-flex items-center bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-lg p-0.5 relative">
-              {(["config", "build", "library"] as const).map((v) => {
+              {(["config", "projects", "build", "library"] as const).map((v) => {
                 const active = view === v;
                 const Icon =
-                  v === "config" ? SettingsIcon : v === "build" ? Wrench : Library;
-                const label = v === "config" ? "Config" : v === "build" ? "Build" : "Library";
+                  v === "config"
+                    ? SettingsIcon
+                    : v === "projects"
+                      ? FolderGit2
+                      : v === "build"
+                        ? Wrench
+                        : Library;
+                const label =
+                  v === "config"
+                    ? "Config"
+                    : v === "projects"
+                      ? "Projects"
+                      : v === "build"
+                        ? "Build"
+                        : "Library";
                 return (
                   <button
                     key={v}
@@ -427,6 +442,8 @@ export function AppShell() {
       <main className="flex-1">
         {view === "build" ? (
           <BuildShell />
+        ) : view === "projects" ? (
+          <ProjectsShell />
         ) : view === "library" ? (
           <LibraryShell
             projectDir={projectDir}

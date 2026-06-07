@@ -3,8 +3,7 @@
 // native window. The server runs in a child Node process (via the
 // ELECTRON_RUN_AS_NODE trick so we don't bundle a separate node binary).
 
-const { app, BrowserWindow, shell, Menu } = require("electron");
-const { spawn } = require("node:child_process");
+const { app, BrowserWindow, shell, Menu, utilityProcess } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -76,7 +75,8 @@ function clearPidFile() {
 function killServer() {
   if (!serverProcess) return;
   try {
-    serverProcess.kill("SIGTERM");
+    // utilityProcess exposes .kill(); it returns true/false rather than taking a signal.
+    serverProcess.kill();
   } catch {
     /* ignore */
   }
@@ -140,20 +140,27 @@ async function startServer() {
   }
   serverPort = await pickFreePort();
 
-  serverProcess = spawn(process.execPath, [serverJs], {
+  // Run the Next.js server with Electron's built-in utilityProcess instead of
+  // child_process.spawn + ELECTRON_RUN_AS_NODE. Two big wins:
+  //   1. No second Dock icon — utilityProcess never initializes Cocoa, so the
+  //      server child stays invisible (the old "exec" icon is gone).
+  //   2. The child's lifetime is bound to this process — it's torn down
+  //      automatically when the app exits, even on a hard quit.
+  serverProcess = utilityProcess.fork(serverJs, [], {
     cwd: path.dirname(serverJs),
     env: {
       ...process.env,
-      // The magic trick: make Electron's binary behave as a normal Node runtime
-      ELECTRON_RUN_AS_NODE: "1",
       PORT: String(serverPort),
       HOSTNAME: "127.0.0.1",
       NODE_ENV: "production",
     },
     stdio: process.env.CCM_DEBUG === "1" ? "inherit" : "ignore",
+    serviceName: "claude-config-server",
   });
 
-  writePidFile(serverProcess.pid);
+  serverProcess.on("spawn", () => {
+    if (serverProcess && serverProcess.pid) writePidFile(serverProcess.pid);
+  });
 
   serverProcess.on("exit", (code) => {
     serverProcess = null;
@@ -173,7 +180,10 @@ function createWindow() {
     height: 900,
     minWidth: 980,
     minHeight: 640,
-    titleBarStyle: "hiddenInset",
+    // Use the standard native title bar so the window drags/moves like any
+    // other app. (The previous "hiddenInset" hid the bar but the web content
+    // defined no -webkit-app-region drag strip, so the window couldn't be moved.)
+    titleBarStyle: "default",
     backgroundColor: "#0a0a0c",
     title: "Claude Config",
     show: false,
