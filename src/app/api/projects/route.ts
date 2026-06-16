@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import { readAppConfig, logicPathFor, vaultPathFor } from "@/lib/appConfig";
+import { scanAllSessions } from "@/lib/sessionScan";
 
 export const dynamic = "force-dynamic";
+
+// A session must reference a directory at least this many times for us to treat
+// it as "a project the user works on" (filters out incidental path mentions).
+const WORKED_DIR_THRESHOLD = 8;
 
 // ─── What makes a directory a "project" ──────────────────────────
 // Any of these present at the top level → we treat the dir as a project.
@@ -136,6 +142,7 @@ async function claudeSessionCwds(): Promise<Map<string, number>> {
 
 export async function GET() {
   const home = os.homedir();
+  const { contextVaultRoot } = await readAppConfig();
 
   // 1. Candidate directories: one level under a set of common roots.
   const searchRoots = [
@@ -174,6 +181,33 @@ export async function GET() {
   const sessionCwds = await claudeSessionCwds();
   for (const cwd of sessionCwds.keys()) candidates.add(cwd);
 
+  // 2b. Directories that Claude sessions substantially worked on — even without
+  // git/CLAUDE.md markers (e.g. ~/Vault, ~/Ledger). The user clearly works on
+  // these; the only signal is that sessions hammered files inside them. To stay
+  // at the *project* level we only promote a worked path when (a) it's a direct
+  // child of a search root (same level the marker scan enumerates — never a
+  // subdir like .../backend or a file like package.json), and (b) it's a real
+  // directory. dir → most-recent session mtime gives them accurate recency.
+  const searchRootSet = new Set(searchRoots);
+  const workedCandidates = new Map<string, number>();
+  const scanned = await scanAllSessions();
+  for (const s of scanned) {
+    for (const [dir, count] of Object.entries(s.mentions)) {
+      if (count < WORKED_DIR_THRESHOLD) continue;
+      if (dir === home || searchRootSet.has(dir)) continue;
+      if (!searchRootSet.has(path.dirname(dir))) continue; // project level only
+      workedCandidates.set(dir, Math.max(workedCandidates.get(dir) ?? 0, s.modified ?? 0));
+    }
+  }
+  const workedDirs = new Map<string, number>();
+  await Promise.all(
+    [...workedCandidates].map(async ([dir, mtime]) => {
+      const st = await statSafe(dir);
+      if (st && st.isDirectory()) workedDirs.set(dir, mtime);
+    }),
+  );
+  for (const dir of workedDirs.keys()) candidates.add(dir);
+
   // Canonicalize + dedup. On case-insensitive filesystems (default on macOS)
   // ~/projects and ~/Projects are the same directory but distinct strings;
   // realpath collapses them (and resolves symlinks) to one canonical path.
@@ -195,10 +229,14 @@ export async function GET() {
       // The home dir itself isn't a "project" — its .claude/ is the global
       // config, already editable under the Config → Global Claude tab.
       if (dir === home) return null;
-      const isProject = await detectProject(dir);
+      // The context vault holds our own generated files (logic.md/credentials.md);
+      // sessions that write there shouldn't make the vault look like a project.
+      if (dir === contextVaultRoot || dir.startsWith(contextVaultRoot + path.sep)) return null;
+      const worked = workedDirs.has(dir);
+      const isProject = (await detectProject(dir)) || worked;
       if (!isProject) return null;
 
-      const files = await Promise.all(
+      const nativeFiles = await Promise.all(
         RELEVANT_FILES.map(async (def) => {
           const abs = path.join(dir, def.rel);
           const st = await statSafe(abs);
@@ -210,9 +248,43 @@ export async function GET() {
             exists: Boolean(st && st.isFile()),
             size: st?.isFile() ? st.size : 0,
             mtime: st?.mtimeMs ?? null,
+            inVault: false,
           };
         }),
       );
+
+      // logic.md is the app's own decision-log file. It lives in the central
+      // vault (configurable), NOT in the project — so it shows first and is
+      // flagged so the UI can explain where it's stored.
+      const logicAbs = logicPathFor(contextVaultRoot, dir);
+      const logicSt = await statSafe(logicAbs);
+      const logicFile = {
+        kind: "logic",
+        label: "logic.md",
+        format: "markdown" as const,
+        absolutePath: logicAbs,
+        exists: Boolean(logicSt && logicSt.isFile()),
+        size: logicSt?.isFile() ? logicSt.size : 0,
+        mtime: logicSt?.mtimeMs ?? null,
+        inVault: true,
+      };
+
+      // credentials.md — a local-only inventory of API keys/tokens/passwords for
+      // this project, so the user can track and rotate them. Also vault-stored
+      // (outside any repo) so it can't be accidentally committed.
+      const credAbs = vaultPathFor(contextVaultRoot, dir, "credentials.md");
+      const credSt = await statSafe(credAbs);
+      const credentialsFile = {
+        kind: "credentials",
+        label: "credentials.md",
+        format: "markdown" as const,
+        absolutePath: credAbs,
+        exists: Boolean(credSt && credSt.isFile()),
+        size: credSt?.isFile() ? credSt.size : 0,
+        mtime: credSt?.mtimeMs ?? null,
+        inVault: true,
+      };
+      const files = [logicFile, credentialsFile, ...nativeFiles];
 
       const claudeDir = path.join(dir, ".claude");
       const [hasGit, agents, commands, skills] = await Promise.all([
@@ -223,16 +295,17 @@ export async function GET() {
       ]);
 
       const presentCount = files.filter((f) => f.exists).length;
-      // Recency: prefer Claude session mtime, else newest relevant file.
+      // Recency: newest of (session mtime, worked-dir session mtime, files).
       const fileMtimes = files.map((f) => f.mtime ?? 0);
-      const lastActive = Math.max(sessionCwds.get(dir) ?? 0, ...fileMtimes, 0) || null;
+      const lastActive =
+        Math.max(sessionCwds.get(dir) ?? 0, workedDirs.get(dir) ?? 0, ...fileMtimes, 0) || null;
 
       return {
         name: path.basename(dir),
         path: dir,
         hasGit,
         lastActive,
-        seenByClaude: sessionCwds.has(dir),
+        seenByClaude: sessionCwds.has(dir) || worked,
         counts: { agents, commands, skills },
         presentCount,
         files,
@@ -250,5 +323,10 @@ export async function GET() {
       return a.name.localeCompare(b.name);
     });
 
-  return NextResponse.json({ home, count: filtered.length, projects: filtered });
+  return NextResponse.json({
+    home,
+    vaultRoot: contextVaultRoot,
+    count: filtered.length,
+    projects: filtered,
+  });
 }

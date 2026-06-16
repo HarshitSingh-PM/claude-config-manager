@@ -97,9 +97,30 @@ For each scope, the relevant files are surfaced as a sidebar list. Click one to 
 
 ---
 
+## MCP servers
+
+A dedicated **MCP** tab manages the Model Context Protocol servers Claude Code connects to, across all three scopes (user → `~/.claude.json`, project → `.mcp.json`, local → `~/.claude.json` project entry). You can:
+
+- **See** every configured server with its scope, transport (stdio/http/sse/ws), auth model, and `alwaysLoad` state
+- **Enable / disable** a server to save context — since Claude Code has no native per-server disable flag, the app reversibly stashes the config out of the live file and restores it on enable (your other `~/.claude.json` state is preserved, with a backup)
+- **Add / remove / edit** servers (guided fields + a JSON body editor)
+- **Resolve issues**: per-server diagnostics detect the auth model (OAuth / header token / `headersHelper` / env-var) and give the exact fix — including copy-paste `/mcp` (authenticate & reconnect), `claude mcp get <name>`, and `claude mcp reset-project-choices`. Secret values are masked.
+
+> Context tip surfaced in the tab: tool search defers MCP tools by default, so servers barely cost context; `alwaysLoad: true` is what forces them in.
+
+---
+
+## Home dashboard
+
+The app opens on a **Home** dashboard — a control center so you're not dropped straight into the dense Global Claude config. It shows KPI cards (projects, sessions + disk used, config health, context-vault coverage), an "At a glance" panel, and **Recommended next steps** derived from your actual setup (e.g. lock down credential reads, enable the sandbox, review a `bypassPermissions` default, add `logic.md` to projects, clean up tiny sessions). Every card and step deep-links into the relevant section.
+
+---
+
 ## Projects
 
 The **Projects** tab gives you a bird's-eye view of every project on your machine that uses Claude — discovered by scanning your common code roots (`~`, `~/projects`, `~/Developer`, `~/Documents`, …) and decoding the working directories of your recent Claude Code sessions (`~/.claude/projects/`). Projects you've actually used with Claude are flagged and sorted to the top by recency.
+
+It also surfaces folders that aren't git repos and have no `CLAUDE.md`, but that your Claude sessions clearly worked on (e.g. a quick prototype) — promoted into the list automatically.
 
 Pick a project and edit its project-level local files inline, all in one place:
 
@@ -107,6 +128,25 @@ Pick a project and edit its project-level local files inline, all in one place:
 - `.claude/settings.json` · `.claude/settings.local.json` · `.mcp.json`
 
 Files that don't exist yet show a **new** badge — create them from a template or blank in one click. Every save still writes a timestamped `.bak`, and the same path sandbox applies.
+
+### Claude sessions
+
+Both per-project and as one global **All sessions** list, you can see every Claude Code session (the same ones `/resume` shows) with its first prompt, last-worked time, message count, size, and the project it worked on (auto-detected from the file paths each session touched). You can:
+
+- **Sort** by last worked, first started, message count, size, or name
+- **Rename** a session to a friendly label for easy reference
+- **Reassign** a session to a different project if the auto-detection got it wrong
+- **Delete** small or throwaway sessions to clean up (this frees disk and removes them from `/resume`)
+
+### logic.md — a per-project decision log
+
+Each project gets a `logic.md`: a long-term memory of the decisions, rules, and rationale behind it, so they don't get re-litigated or forgotten across sessions. These files live in a central **context vault** (default `~/ClaudeContext/<project>/`, configurable in the Projects header).
+
+Toggle **Auto-maintain logic.md** to inject a small managed block into your global `~/.claude/CLAUDE.md` that tells Claude to read each project's `logic.md` every session and append decisions (and a summary of the logical instructions you give) as you make them — bringing that context back into scope automatically. Toggle it off to remove the block cleanly.
+
+### credentials.md — track & rotate keys
+
+Each project also gets a `credentials.md` in the same vault: a local-only inventory of the API keys, tokens, and passwords the project uses, so you can see what exists and when to rotate. Because it lives in the vault (outside any git repo) it can't be accidentally committed. The same auto-maintain toggle tells Claude to record any credential you share into it — as a **masked** value (prefix + last 4 only), with where it lives and a rotation status. It's plaintext and meant as a tracker, not a secret store; for high-value secrets use an encrypted store.
 
 ---
 

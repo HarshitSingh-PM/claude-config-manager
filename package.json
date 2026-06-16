@@ -1,6 +1,6 @@
 {
   "name": "claude-config-ui",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Local, open-source UI for editing every Claude Code config file — settings, CLAUDE.md, MCP servers, subagents, slash commands, credentials, hooks. User / project-shared / project-local / enterprise scopes, with community presets and tooltips.",
   "keywords": [
     "claude",

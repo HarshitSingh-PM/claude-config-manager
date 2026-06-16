@@ -82,7 +82,9 @@ export const settingsPresets: SettingsPreset[] = [
             hooks: [
               {
                 type: "command",
-                command: "prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true",
+                // Hook input arrives as JSON on stdin; pull the edited file path from it.
+                command:
+                  "f=$(jq -r '.tool_input.file_path // empty'); [ -n \"$f\" ] && prettier --write \"$f\" 2>/dev/null || true",
               },
             ],
           },
@@ -126,6 +128,47 @@ export const settingsPresets: SettingsPreset[] = [
                 type: "command",
                 command:
                   "jq -r '.tool_input.command' | grep -q 'rm -rf' && { echo 'rm -rf blocked by hook' >&2; exit 2; } || exit 0",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  },
+  {
+    id: "plan-mode-first",
+    title: "Plan-mode first",
+    source: "Anthropic — permission modes",
+    description: "Default to read-only planning; Claude proposes a plan before touching anything.",
+    patch: {
+      permissions: {
+        defaultMode: "plan",
+      },
+    },
+  },
+  {
+    id: "trust-project-mcp",
+    title: "Auto-approve this project's MCP servers",
+    source: "Anthropic — MCP settings",
+    description: "Skip the approval prompt for MCP servers defined in this project's .mcp.json.",
+    patch: {
+      enableAllProjectMcpServers: true,
+    },
+  },
+  {
+    id: "session-context-loader",
+    title: "Hook: load project context on start",
+    source: "community — SessionStart context injection",
+    description:
+      "On session start, inject .claude/context.md into the conversation (its stdout is added to context).",
+    patch: {
+      hooks: {
+        SessionStart: [
+          {
+            hooks: [
+              {
+                type: "command",
+                command: "cat .claude/context.md 2>/dev/null || true",
               },
             ],
           },

@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+const HEAVY_EXCLUDES = [
+  "dist-electron/**/*",
+  "build/**/*",
+  "electron/**/*",
+  ".git/**/*",
+  "src/**/*",
+  "**/*.dmg",
+  "**/*.exe",
+  "**/*.bak-*",
+];
+
 const nextConfig: NextConfig = {
   // Self-contained build for `npx claude-config-manager`. Produces
   // .next/standalone/server.js with a minimal node_modules subset.
@@ -14,16 +25,14 @@ const nextConfig: NextConfig = {
   // route's own compiled code is always included regardless of these excludes),
   // so we exclude the heavy/irrelevant trees explicitly.
   outputFileTracingExcludes: {
-    "/api/projects": [
-      "dist-electron/**/*",
-      "build/**/*",
-      "electron/**/*",
-      ".git/**/*",
-      "src/**/*",
-      "**/*.dmg",
-      "**/*.exe",
-      "**/*.bak-*",
-    ],
+    // Same reasoning applies to every route that touches the real filesystem
+    // at runtime (projects scan, session scan, vault config, logic instruction).
+    "/api/projects": HEAVY_EXCLUDES,
+    "/api/sessions": HEAVY_EXCLUDES,
+    "/api/dashboard": HEAVY_EXCLUDES,
+    "/api/mcp": HEAVY_EXCLUDES,
+    "/api/app-config": HEAVY_EXCLUDES,
+    "/api/logic-instruction": HEAVY_EXCLUDES,
   },
 };
 

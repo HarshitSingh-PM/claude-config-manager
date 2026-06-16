@@ -23,6 +23,7 @@ import {
   Wrench,
   Library,
   FolderGit2,
+  LayoutDashboard,
 } from "lucide-react";
 import { tabs, type TabDef, type TabFile } from "@/lib/tabs";
 import type { Scope, FileTarget } from "@/lib/paths";
@@ -39,7 +40,19 @@ import { StatusLineForm } from "./forms/StatusLineForm";
 import { BuildShell } from "./BuildShell";
 import { LibraryShell } from "./LibraryShell";
 import { ProjectsShell } from "./ProjectsShell";
+import { DashboardShell } from "./DashboardShell";
+import { McpShell } from "./McpShell";
 import { InfoIcon, Tooltip } from "./Tooltip";
+
+type View = "home" | "config" | "projects" | "mcp" | "build" | "library";
+const NAV: { v: View; label: string; Icon: typeof SettingsIcon }[] = [
+  { v: "home", label: "Home", Icon: LayoutDashboard },
+  { v: "config", label: "Config", Icon: SettingsIcon },
+  { v: "projects", label: "Projects", Icon: FolderGit2 },
+  { v: "mcp", label: "MCP", Icon: ServerCog },
+  { v: "build", label: "Build", Icon: Wrench },
+  { v: "library", label: "Library", Icon: Library },
+];
 
 type PathsInfo = {
   os: { platform: string; pretty: string };
@@ -86,7 +99,7 @@ const fileTypeIcons: Record<TabFile["type"], React.ReactNode> = {
 export function AppShell() {
   const [paths, setPaths] = useState<PathsInfo | null>(null);
   const [projectDir, setProjectDir] = useState<string>("");
-  const [view, setView] = useState<"config" | "build" | "library" | "projects">("config");
+  const [view, setView] = useState<View>("home");
   const [activeTab, setActiveTab] = useState<Scope>("user");
   const [activeFileIds, setActiveFileIds] = useState<Record<Scope, string>>({
     user: "user.settings",
@@ -331,24 +344,8 @@ export function AppShell() {
 
             {/* ─── Primary nav: Config / Build / Library ─────── */}
             <div className="ml-3 inline-flex items-center bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-lg p-0.5 relative">
-              {(["config", "projects", "build", "library"] as const).map((v) => {
+              {NAV.map(({ v, label, Icon }) => {
                 const active = view === v;
-                const Icon =
-                  v === "config"
-                    ? SettingsIcon
-                    : v === "projects"
-                      ? FolderGit2
-                      : v === "build"
-                        ? Wrench
-                        : Library;
-                const label =
-                  v === "config"
-                    ? "Config"
-                    : v === "projects"
-                      ? "Projects"
-                      : v === "build"
-                        ? "Build"
-                        : "Library";
                 return (
                   <button
                     key={v}
@@ -440,7 +437,11 @@ export function AppShell() {
       </header>
 
       <main className="flex-1">
-        {view === "build" ? (
+        {view === "home" ? (
+          <DashboardShell onNavigate={(v) => setView(v)} />
+        ) : view === "mcp" ? (
+          <McpShell projectDir={projectDir} />
+        ) : view === "build" ? (
           <BuildShell />
         ) : view === "projects" ? (
           <ProjectsShell />

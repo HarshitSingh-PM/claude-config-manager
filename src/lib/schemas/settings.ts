@@ -22,11 +22,13 @@ export const settingsSchema: Schema = {
             "Opus = most capable, expensive. Sonnet = balanced default. Haiku = fast, cheap.",
           options: [
             { value: "", label: "(inherit / default)" },
-            { value: "sonnet", label: "sonnet", description: "Balanced — recommended default" },
-            { value: "haiku", label: "haiku", description: "Fast & cheap, good for routine tasks" },
+            { value: "sonnet", label: "sonnet", description: "Balanced — recommended default (Sonnet 4.6)" },
+            { value: "haiku", label: "haiku", description: "Fast & cheap, good for routine tasks (Haiku 4.5)" },
             { value: "opus", label: "opus", description: "Most capable (now Opus 4.8)" },
             { value: "opusplan", label: "opusplan", description: "Opus while planning, Sonnet to execute" },
-            { value: "claude-opus-4-8", label: "claude-opus-4-8 (pinned — newest)" },
+            { value: "fable", label: "fable", description: "Newest model family (Fable 5)" },
+            { value: "claude-opus-4-8", label: "claude-opus-4-8 (pinned)" },
+            { value: "claude-fable-5", label: "claude-fable-5 (pinned — newest)" },
             { value: "claude-sonnet-4-6", label: "claude-sonnet-4-6 (pinned)" },
             { value: "claude-opus-4-7", label: "claude-opus-4-7 (pinned)" },
             { value: "claude-haiku-4-5", label: "claude-haiku-4-5 (pinned)" },
@@ -36,16 +38,23 @@ export const settingsSchema: Schema = {
           type: "select",
           key: "effortLevel",
           label: "Effort level",
-          tooltip: "How much extended-thinking budget to use.",
-          significance: "Higher = better reasoning but more tokens and slower.",
+          tooltip: "Persisted reasoning effort. `xhigh` is the recommended setting for hard coding work.",
+          significance: "Higher = better reasoning but more tokens and slower. Adjust live with /effort.",
           options: [
             { value: "", label: "(default)" },
             { value: "low", label: "low" },
             { value: "medium", label: "medium" },
             { value: "high", label: "high" },
             { value: "xhigh", label: "xhigh" },
-            { value: "max", label: "max" },
           ],
+        },
+        {
+          type: "list",
+          key: "fallbackModel",
+          label: "Fallback models",
+          tooltip: "Models tried in order when the primary is unavailable (up to 3).",
+          significance: "Keeps sessions going through rate limits or provider outages.",
+          itemPlaceholder: "claude-sonnet-4-6",
         },
         {
           type: "boolean",
@@ -59,7 +68,8 @@ export const settingsSchema: Schema = {
           key: "includeCoAuthoredBy",
           label: "Add `Co-Authored-By: Claude` to git commits",
           tooltip: "Append the Claude co-author footer to git commits Claude creates.",
-          significance: "Turn off if you don't want commits attributed to Claude.",
+          significance:
+            "Turn off if you don't want commits attributed to Claude. Note: newer Claude Code prefers the `attribution` object for finer control; this key still works.",
         },
       ],
     },
@@ -153,6 +163,35 @@ export const settingsSchema: Schema = {
     },
     {
       type: "group",
+      key: "mcp_group",
+      label: "MCP servers",
+      tooltip: "Control which Model Context Protocol servers from .mcp.json are approved.",
+      fields: [
+        {
+          type: "boolean",
+          key: "enableAllProjectMcpServers",
+          label: "Auto-approve all project MCP servers",
+          tooltip: "Approve every server in this project's .mcp.json without prompting.",
+          significance: "Convenient for trusted repos; leave off if you vet servers individually.",
+        },
+        {
+          type: "list",
+          key: "enabledMcpjsonServers",
+          label: "Approved .mcp.json servers",
+          tooltip: "Names of specific .mcp.json servers to approve.",
+          itemPlaceholder: "playwright",
+        },
+        {
+          type: "list",
+          key: "disabledMcpjsonServers",
+          label: "Rejected .mcp.json servers",
+          tooltip: "Names of specific .mcp.json servers to reject.",
+          itemPlaceholder: "some-untrusted-server",
+        },
+      ],
+    },
+    {
+      type: "group",
       key: "env",
       label: "Environment variables",
       tooltip: "Env vars exported into every bash command and MCP server in this scope.",
@@ -223,6 +262,13 @@ export const settingsSchema: Schema = {
           tooltip: "Let Claude write its own memory file as it learns about your project.",
           significance:
             "On by default. Turn off if you prefer to maintain CLAUDE.md by hand only.",
+        },
+        {
+          type: "string",
+          key: "autoMemoryDirectory",
+          label: "Auto-memory directory",
+          tooltip: "Custom directory for auto-memory storage. Leave blank for the default.",
+          placeholder: "~/.claude/memory",
         },
         {
           type: "string",
@@ -299,6 +345,58 @@ export const settingsSchema: Schema = {
     },
     {
       type: "group",
+      key: "autonomy_group",
+      label: "Autonomy & agents",
+      tooltip:
+        "Settings behind Claude Code's autonomous features. /goal (work until a condition holds) and /loop (recurring/scheduled runs) are interactive commands, not settings — these toggles govern the machinery around them.",
+      fields: [
+        {
+          type: "boolean",
+          key: "autoCompactEnabled",
+          label: "Auto-compact at context limit",
+          tooltip: "Automatically summarize/compact the conversation when it approaches the context limit.",
+          significance: "On by default. Keeps long /goal and /loop runs going without manual /compact.",
+        },
+        {
+          type: "boolean",
+          key: "fileCheckpointingEnabled",
+          label: "File checkpointing (/rewind)",
+          tooltip: "Snapshot files before edits so you can /rewind to an earlier state.",
+          significance: "On by default. A safety net for autonomous, multi-edit runs.",
+        },
+        {
+          type: "boolean",
+          key: "disableAgentView",
+          label: "Disable agent view & background agents",
+          tooltip: "Turn off background agents and the `claude agents` view that shows running/blocked/done sessions.",
+          significance: "Leave off (i.e. keep agent view enabled) unless you don't use background sessions.",
+        },
+        {
+          type: "boolean",
+          key: "disableWorkflows",
+          label: "Disable dynamic workflows",
+          tooltip: "Disable Claude-authored workflow scripts that orchestrate many subagents.",
+        },
+        {
+          type: "boolean",
+          key: "disableRemoteControl",
+          label: "Disable Remote Control",
+          tooltip: "Turn off driving this session from the mobile/remote app.",
+        },
+        {
+          type: "string",
+          key: "_autonomyNote",
+          label: "Note",
+          tooltip: "Reminder about interactive autonomy commands.",
+          multiline: true,
+          rows: 2,
+          placeholder:
+            "/goal <condition> keeps Claude working until the condition holds; /loop [interval] <task> runs a task on a schedule (self-paces if no interval). These are typed in the session, not stored here.",
+        },
+      ],
+    },
+    {
+      type: "group",
       key: "telemetry_misc",
       label: "Telemetry & misc",
       tooltip: "Smaller knobs.",
@@ -314,6 +412,46 @@ export const settingsSchema: Schema = {
           key: "awsAuthRefresh",
           label: "Auto-refresh AWS credentials",
           tooltip: "For long sessions using AWS SigV4.",
+        },
+        {
+          type: "select",
+          key: "editorMode",
+          label: "Editor mode",
+          tooltip: "Key bindings for the input box.",
+          options: [
+            { value: "", label: "(default)" },
+            { value: "normal", label: "normal" },
+            { value: "vim", label: "vim" },
+          ],
+        },
+        {
+          type: "select",
+          key: "defaultShell",
+          label: "Default shell",
+          tooltip: "Shell used for input-box commands.",
+          options: [
+            { value: "", label: "(default)" },
+            { value: "bash", label: "bash" },
+            { value: "powershell", label: "powershell" },
+          ],
+        },
+        {
+          type: "select",
+          key: "autoUpdatesChannel",
+          label: "Auto-updates channel",
+          tooltip: "Which release channel Claude Code updates from.",
+          options: [
+            { value: "", label: "(default)" },
+            { value: "stable", label: "stable" },
+            { value: "latest", label: "latest" },
+          ],
+        },
+        {
+          type: "string",
+          key: "language",
+          label: "Response language",
+          tooltip: "Claude's preferred response language (e.g. en, es, ja).",
+          placeholder: "en",
         },
         {
           type: "list",
@@ -339,6 +477,7 @@ export type HookEvent =
   | "PostToolUse"
   | "UserPromptSubmit"
   | "SessionStart"
+  | "SessionEnd"
   | "Stop"
   | "Notification"
   | "PreCompact"
@@ -364,6 +503,11 @@ export const hookEvents: { value: HookEvent; label: string; tooltip: string }[] 
     value: "SessionStart",
     label: "SessionStart",
     tooltip: "Session begins or resumes. Load context, set env.",
+  },
+  {
+    value: "SessionEnd",
+    label: "SessionEnd",
+    tooltip: "Session ends. Clean up, flush logs, persist state.",
   },
   {
     value: "Stop",
