@@ -19,8 +19,10 @@ import {
   HardDrive,
   Lock,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card } from "./primitives";
 import { relTime } from "./SessionsPanel";
+import { Reveal, Stagger, AnimatedNumber, Skeleton, fadeUp, SPRING } from "./motion";
 
 type View = "config" | "projects" | "build" | "library";
 
@@ -167,27 +169,29 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
   return (
     <div className="max-w-[1280px] mx-auto px-6 py-7 space-y-6">
       {/* Greeting */}
-      <div>
+      <Reveal>
         <h2 className="text-lg font-semibold tracking-tight">Welcome to Claude Config Manager</h2>
         <p className="text-xs text-[color:var(--fg-muted)] mt-1">
           Your control center for Claude Code on this machine — config health, projects, sessions,
           and what&apos;s worth doing next. Jump into a section below.
         </p>
-      </div>
+      </Reveal>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" stagger={0.07}>
         <KpiCard
           icon={<FolderGit2 size={15} />}
           label="Projects"
-          value={projects === null ? "…" : String(proj.count)}
+          loading={projects === null}
+          count={proj.count}
           sub={projects === null ? "" : `${proj.usedWithClaude} used with Claude`}
           onClick={() => onNavigate("projects")}
         />
         <KpiCard
           icon={<MessagesSquare size={15} />}
           label="Claude sessions"
-          value={data === null ? "…" : String(data.sessions.count)}
+          loading={data === null}
+          count={data?.sessions.count ?? 0}
           sub={
             data === null
               ? ""
@@ -198,6 +202,7 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
         <KpiCard
           icon={data?.config.credentialsLocked && data?.config.sandboxEnabled ? <ShieldCheck size={15} /> : <ShieldAlert size={15} />}
           label="Config health"
+          loading={data === null}
           value={
             data === null
               ? "…"
@@ -208,12 +213,21 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
                   : "Empty"
           }
           sub={data === null ? "" : `${data.config.model ?? "default model"} · ${data.config.permissionMode ?? "default"} mode`}
-          tone={data && !(data.config.credentialsLocked && data.config.sandboxEnabled) ? "warn" : "ok"}
+          tone={
+            data === null
+              ? "ok"
+              : data.config.credentialsLocked && data.config.sandboxEnabled
+                ? "good"
+                : data.config.settingsExists
+                  ? "warn"
+                  : "bad"
+          }
           onClick={() => onNavigate("config")}
         />
         <KpiCard
           icon={<Database size={15} />}
           label="Context vault"
+          loading={projects === null}
           value={projects === null ? "…" : `${proj.logic}/${proj.count}`}
           sub={
             data === null
@@ -222,7 +236,7 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
           }
           onClick={() => onNavigate("projects")}
         />
-      </div>
+      </Stagger>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
         {/* Recommended actions */}
@@ -234,17 +248,32 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
           {data === null ? (
             <div className="text-xs text-[color:var(--fg-muted)] py-6 text-center">Checking your setup…</div>
           ) : actions.length === 0 ? (
-            <div className="flex items-center gap-2.5 py-6 justify-center text-[color:var(--success)]">
-              <CheckCircle2 size={18} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={SPRING}
+              className="flex items-center gap-2.5 py-6 justify-center text-[color:var(--success)]"
+            >
+              <motion.span
+                initial={{ scale: 0, rotate: -30 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 14, delay: 0.1 }}
+              >
+                <CheckCircle2 size={18} />
+              </motion.span>
               <span className="text-sm">Everything looks well configured. Nice.</span>
-            </div>
+            </motion.div>
           ) : (
-            <div className="space-y-2.5">
+            <Stagger className="space-y-2.5" stagger={0.06}>
               {actions.map((act) => (
-                <button
+                <motion.button
                   key={act.id}
+                  variants={fadeUp}
                   onClick={() => onNavigate(act.go)}
-                  className="w-full text-left flex items-start gap-3 px-3 py-2.5 rounded-lg border border-[color:var(--border)] hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--bg-elev-2)] transition group"
+                  whileHover={{ x: 3 }}
+                  whileTap={{ scale: 0.99 }}
+                  transition={SPRING}
+                  className="w-full text-left flex items-start gap-3 px-3 py-2.5 rounded-lg border border-[color:var(--border)] hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--bg-elev-2)] transition-colors group"
                 >
                   <span
                     className={`shrink-0 mt-0.5 ${
@@ -260,11 +289,11 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
                     </span>
                   </span>
                   <span className="shrink-0 inline-flex items-center gap-1 text-[10.5px] text-[color:var(--fg-faint)] group-hover:text-[color:var(--accent)] transition mt-0.5">
-                    {act.cta} <ArrowRight size={11} />
+                    {act.cta} <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
                   </span>
-                </button>
+                </motion.button>
               ))}
-            </div>
+            </Stagger>
           )}
         </Card>
 
@@ -272,7 +301,7 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
         <div className="space-y-4">
           <Card className="p-5">
             <h3 className="text-sm font-semibold mb-3">At a glance</h3>
-            <div className="space-y-2.5">
+            <Stagger className="space-y-2.5" stagger={0.04}>
               <GlanceRow icon={<Cpu size={13} />} label="Model" value={data?.config.model ?? "default"} />
               <GlanceRow
                 icon={<ShieldCheck size={13} />}
@@ -300,15 +329,15 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
                 label="Last session"
                 value={data?.sessions.lastActive ? relTime(data.sessions.lastActive) : "—"}
               />
-            </div>
+            </Stagger>
           </Card>
 
-          <div className="grid grid-cols-2 gap-3">
+          <Stagger className="grid grid-cols-2 gap-3" stagger={0.05}>
             <JumpCard icon={<SettingsIcon size={16} />} label="Config" hint="settings, MCP, hooks" onClick={() => onNavigate("config")} />
             <JumpCard icon={<FolderGit2 size={16} />} label="Projects" hint="files & sessions" onClick={() => onNavigate("projects")} />
             <JumpCard icon={<Wrench size={16} />} label="Build" hint="agents, commands" onClick={() => onNavigate("build")} />
             <JumpCard icon={<Library size={16} />} label="Library" hint="browse presets" onClick={() => onNavigate("library")} />
-          </div>
+          </Stagger>
         </div>
       </div>
     </div>
@@ -316,39 +345,70 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
 }
 
 function KpiCard({
-  icon, label, value, sub, onClick, tone = "ok",
+  icon, label, value, sub, onClick, tone = "ok", count, loading,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value?: string;
   sub: string;
   onClick: () => void;
-  tone?: "ok" | "warn";
+  tone?: "ok" | "warn" | "good" | "bad";
+  /** When provided, the value counts up to this number. */
+  count?: number;
+  loading?: boolean;
 }) {
+  const chip =
+    tone === "warn"
+      ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)]"
+      : tone === "good"
+        ? "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+        : tone === "bad"
+          ? "bg-[color:var(--danger)]/15 text-[color:var(--danger)]"
+          : "bg-[color:var(--accent-soft)] text-[color:var(--accent)]";
+  const valueColor =
+    tone === "warn"
+      ? "text-[color:var(--warning)]"
+      : tone === "good"
+        ? "text-[color:var(--success)]"
+        : tone === "bad"
+          ? "text-[color:var(--danger)]"
+          : "text-[color:var(--fg)]";
   return (
-    <button
+    <motion.button
+      variants={fadeUp}
       onClick={onClick}
-      className="text-left rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 backdrop-blur-sm p-4 hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--bg-elev-2)] transition group"
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      transition={SPRING}
+      className="text-left rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 backdrop-blur-sm p-4 surface-interactive group"
     >
       <div className="flex items-center justify-between">
-        <span
-          className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${
-            tone === "warn"
-              ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)]"
-              : "bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
-          }`}
+        <motion.span
+          whileHover={{ rotate: -8, scale: 1.06 }}
+          transition={SPRING}
+          className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${chip}`}
         >
           {icon}
-        </span>
+        </motion.span>
         <ArrowRight
           size={13}
-          className="text-[color:var(--fg-faint)] opacity-0 group-hover:opacity-100 transition"
+          className="text-[color:var(--fg-faint)] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"
         />
       </div>
-      <div className="text-2xl font-semibold mt-3 tracking-tight">{value}</div>
-      <div className="text-[11px] text-[color:var(--fg)] mt-0.5">{label}</div>
-      {sub && <div className="text-[10.5px] text-[color:var(--fg-faint)] mt-0.5">{sub}</div>}
-    </button>
+      {loading ? (
+        <Skeleton className="h-7 w-16 mt-3" />
+      ) : (
+        <div className={`text-2xl font-semibold mt-3 tracking-tight ${count != null ? "text-[color:var(--fg)]" : valueColor}`}>
+          {count != null ? <AnimatedNumber value={count} /> : value}
+        </div>
+      )}
+      <div className="text-[11px] text-[color:var(--fg)] mt-1">{label}</div>
+      {loading ? (
+        <Skeleton className="h-3 w-24 mt-1.5" />
+      ) : (
+        sub && <div className="text-[10.5px] text-[color:var(--fg-faint)] mt-0.5">{sub}</div>
+      )}
+    </motion.button>
   );
 }
 
@@ -361,7 +421,7 @@ function GlanceRow({
   bad?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 text-xs">
+    <motion.div variants={fadeUp} className="flex items-center justify-between gap-3 text-xs">
       <span className="inline-flex items-center gap-2 text-[color:var(--fg-muted)]">
         <span className="text-[color:var(--fg-faint)]">{icon}</span>
         {label}
@@ -373,7 +433,7 @@ function GlanceRow({
       >
         {value}
       </span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -386,16 +446,26 @@ function JumpCard({
   onClick: () => void;
 }) {
   return (
-    <button
+    <motion.button
+      variants={fadeUp}
       onClick={onClick}
-      className="text-left rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 p-3.5 hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--bg-elev-2)] transition group"
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      transition={SPRING}
+      className="text-left rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 p-3.5 surface-interactive group"
     >
-      <span className="text-[color:var(--accent)] inline-flex">{icon}</span>
+      <motion.span
+        whileHover={{ scale: 1.15, rotate: -6 }}
+        transition={SPRING}
+        className="text-[color:var(--accent)] inline-flex"
+      >
+        {icon}
+      </motion.span>
       <div className="text-xs font-medium mt-2 inline-flex items-center gap-1">
         {label}
-        <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 transition" />
+        <ArrowRight size={11} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
       </div>
       <div className="text-[10.5px] text-[color:var(--fg-faint)] mt-0.5">{hint}</div>
-    </button>
+    </motion.button>
   );
 }

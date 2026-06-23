@@ -7,13 +7,14 @@ import {
   Check,
   X,
   GitBranch,
-  ChevronDown,
   ChevronRight,
   Clock,
   FolderGit2,
   Sparkles,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, Select } from "./primitives";
+import { EASE_OUT, SPRING } from "./motion";
 
 // As returned by /api/sessions (project not yet resolved).
 export type RawSession = {
@@ -228,15 +229,19 @@ function SessionRow({
   };
 
   return (
+    <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={EASE_OUT}>
     <Card className="px-3 py-2.5">
       <div className="flex items-start gap-2.5">
-        <button
+        <motion.button
           onClick={() => setExpanded((e) => !e)}
+          whileTap={{ scale: 0.8 }}
           className="mt-0.5 text-[color:var(--fg-faint)] hover:text-[color:var(--fg)] transition shrink-0"
           aria-label={expanded ? "Collapse" : "Expand"}
         >
-          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        </button>
+          <motion.span animate={{ rotate: expanded ? 90 : 0 }} transition={SPRING} className="inline-flex">
+            <ChevronRight size={14} />
+          </motion.span>
+        </motion.button>
 
         <div className="min-w-0 flex-1">
           {editing ? (
@@ -328,7 +333,15 @@ function SessionRow({
         </div>
       </div>
 
+      <AnimatePresence initial={false}>
       {expanded && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="overflow-hidden"
+        >
         <div className="mt-2.5 pt-2.5 border-t border-[color:var(--border)] space-y-2 pl-[26px]">
           {session.firstPrompt && (
             <div>
@@ -364,8 +377,11 @@ function SessionRow({
             </div>
           </div>
         </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </Card>
+    </motion.div>
   );
 }
 

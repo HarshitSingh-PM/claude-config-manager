@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
     "/api/mcp": HEAVY_EXCLUDES,
     "/api/app-config": HEAVY_EXCLUDES,
     "/api/logic-instruction": HEAVY_EXCLUDES,
+    "/api/orchestrator": HEAVY_EXCLUDES,
+    "/api/orchestrator/stream": HEAVY_EXCLUDES,
+    "/api/orchestrator/live-sessions": HEAVY_EXCLUDES,
   },
 };
 

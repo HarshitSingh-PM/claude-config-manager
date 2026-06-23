@@ -7,20 +7,31 @@ import { cn } from "@/lib/utils";
 export function Card({
   children,
   className,
+  interactive,
+  onClick,
 }: {
   children: ReactNode;
   className?: string;
+  /** Adds hover-lift + accent glow; use for clickable/navigational cards. */
+  interactive?: boolean;
+  onClick?: () => void;
 }) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 backdrop-blur-sm",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
+  const base =
+    "rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 backdrop-blur-sm";
+  if (interactive || onClick) {
+    return (
+      <motion.div
+        onClick={onClick}
+        whileHover={{ y: -3 }}
+        whileTap={onClick ? { scale: 0.99 } : undefined}
+        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+        className={cn(base, "surface-interactive", onClick && "cursor-pointer", className)}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+  return <div className={cn(base, className)}>{children}</div>;
 }
 
 export function SectionHeader({
@@ -142,11 +153,13 @@ export function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <button
+    <motion.button
       type="button"
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
+      whileTap={{ scale: 0.92 }}
+      transition={{ type: "spring", stiffness: 600, damping: 30 }}
       className={cn(
         "relative h-5 w-9 rounded-full transition-colors",
         checked
@@ -162,7 +175,7 @@ export function Toggle({
           checked ? "left-[18px]" : "left-0.5",
         )}
       />
-    </button>
+    </motion.button>
   );
 }
 
@@ -242,17 +255,20 @@ export function IconButton({
     primary: "bg-[color:var(--accent)] text-black hover:bg-[color:var(--accent-2)]",
   }[variant];
   return (
-    <button
+    <motion.button
       onClick={onClick}
       aria-label={label}
       disabled={disabled}
+      whileTap={disabled ? undefined : { scale: 0.88 }}
+      whileHover={disabled ? undefined : { scale: 1.08 }}
+      transition={{ type: "spring", stiffness: 600, damping: 28 }}
       className={cn(
         "inline-flex items-center justify-center h-7 w-7 rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed",
         v,
       )}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }
 

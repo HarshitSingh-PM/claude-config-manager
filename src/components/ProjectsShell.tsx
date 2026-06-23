@@ -22,7 +22,9 @@ import {
   KeyRound,
   ShieldAlert,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, Textarea, Toggle } from "./primitives";
+import { Stagger, fadeUp, SPRING } from "./motion";
 import {
   SessionsView,
   resolveSession,
@@ -236,6 +238,14 @@ export function ProjectsShell() {
         }}
       />
 
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={mode}
+        initial={{ opacity: 0, x: mode === "sessions" ? 16 : -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: mode === "sessions" ? -16 : 16 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+      >
       {mode === "sessions" ? (
         <div className="mt-4">
           <SessionsView
@@ -272,14 +282,18 @@ export function ProjectsShell() {
                   No projects found.
                 </div>
               ) : (
-                <div className="space-y-0.5">
+                <Stagger className="space-y-0.5" stagger={0.025}>
                   {filtered.map((p) => {
                     const isActive = p.path === activePath;
                     return (
-                      <button
+                      <motion.button
                         key={p.path}
+                        variants={fadeUp}
                         onClick={() => setActivePath(p.path)}
-                        className={`w-full text-left px-2.5 py-2 rounded-md transition ${
+                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ x: 2 }}
+                        transition={SPRING}
+                        className={`w-full text-left px-2.5 py-2 rounded-md transition-colors ${
                           isActive
                             ? "bg-[color:var(--accent-soft)]"
                             : "hover:bg-[color:var(--bg-elev-2)]"
@@ -321,10 +335,10 @@ export function ProjectsShell() {
                             {relativeTime(p.lastActive)}
                           </span>
                         </div>
-                      </button>
+                      </motion.button>
                     );
                   })}
-                </div>
+                </Stagger>
               )}
             </Card>
           </div>
@@ -349,6 +363,8 @@ export function ProjectsShell() {
           </div>
         </div>
       )}
+      </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
@@ -364,20 +380,29 @@ function Segmented<T extends string>({
 }) {
   return (
     <div className="inline-flex items-center gap-0.5 p-0.5 rounded-lg bg-[color:var(--bg-elev-2)] border border-[color:var(--border)]">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          onClick={() => onChange(o.value)}
-          className={`inline-flex items-center gap-1.5 text-[11px] px-2.5 h-6 rounded-md transition ${
-            value === o.value
-              ? "bg-[color:var(--accent)] text-black font-medium"
-              : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
-          }`}
-        >
-          {o.icon}
-          {o.label}
-        </button>
-      ))}
+      {options.map((o) => {
+        const isActive = value === o.value;
+        return (
+          <motion.button
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            whileTap={{ scale: 0.95 }}
+            className={`relative inline-flex items-center gap-1.5 text-[11px] px-2.5 h-6 rounded-md transition-colors z-10 ${
+              isActive ? "text-black font-medium" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
+            }`}
+          >
+            {isActive && (
+              <motion.span
+                layoutId="segmented-pill"
+                className="absolute inset-0 rounded-md bg-[color:var(--accent)] -z-10"
+                transition={SPRING}
+              />
+            )}
+            {o.icon}
+            {o.label}
+          </motion.button>
+        );
+      })}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Rocket, Package, Globe, Terminal, Hammer, Lock } from "lucide-react";
 import { buildTools, type BuildTool } from "@/lib/buildTools";
 import { Card } from "./primitives";
+import { Reveal, Stagger, fadeUp, SPRING } from "./motion";
 import { SaaSPromptForm } from "./forms/SaaSPromptForm";
 
 const iconFor = (key: BuildTool["iconKey"]) => {
@@ -26,7 +27,8 @@ export function BuildShell() {
   return (
     <div className="max-w-[1280px] mx-auto px-6 py-6">
       {/* ─── Intro banner ─────────────────────────────────── */}
-      <Card className="p-4 mb-5 flex items-start gap-3 bg-gradient-to-br from-[color:var(--accent-soft)]/40 to-transparent border-[color:var(--accent)]/30">
+      <Reveal className="mb-5">
+      <Card className="p-4 flex items-start gap-3 bg-gradient-to-br from-[color:var(--accent-soft)]/40 to-transparent border-[color:var(--accent)]/30">
         <div className="h-9 w-9 shrink-0 rounded-lg bg-[color:var(--accent)] text-black flex items-center justify-center">
           <Hammer size={16} />
         </div>
@@ -39,6 +41,7 @@ export function BuildShell() {
           </p>
         </div>
       </Card>
+      </Reveal>
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-5">
         {/* ─── Sidebar: tools ─────────────────────────────── */}
@@ -46,25 +49,36 @@ export function BuildShell() {
           <div className="text-[10px] font-medium tracking-wide uppercase text-[color:var(--fg-faint)] px-2 py-1.5">
             Builders
           </div>
-          <div className="space-y-0.5">
+          <Stagger className="space-y-0.5" stagger={0.04}>
             {buildTools.map((t) => {
               const disabled = t.status !== "ready";
               const isActive = t.id === active.id;
               return (
-                <button
+                <motion.button
                   key={t.id}
+                  variants={fadeUp}
                   onClick={() => !disabled && setActiveId(t.id)}
                   disabled={disabled}
-                  className={`w-full text-left px-2.5 py-2 rounded-md transition flex items-start gap-2 ${
+                  whileTap={disabled ? undefined : { scale: 0.97 }}
+                  whileHover={disabled ? { x: [0, -2, 2, -2, 0] } : { x: 2 }}
+                  transition={SPRING}
+                  className={`relative w-full text-left px-2.5 py-2 rounded-md transition-colors flex items-start gap-2 ${
                     isActive
-                      ? "bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
+                      ? "text-[color:var(--accent)]"
                       : disabled
                         ? "text-[color:var(--fg-faint)] cursor-not-allowed opacity-60"
                         : "text-[color:var(--fg-muted)] hover:bg-[color:var(--bg-elev-2)] hover:text-[color:var(--fg)]"
                   }`}
                 >
-                  <span className="shrink-0 mt-0.5">{iconFor(t.iconKey)}</span>
-                  <span className="flex-1 min-w-0">
+                  {isActive && (
+                    <motion.span
+                      layoutId="build-active-pill"
+                      className="absolute inset-0 rounded-md bg-[color:var(--accent-soft)]"
+                      transition={SPRING}
+                    />
+                  )}
+                  <span className="relative shrink-0 mt-0.5">{iconFor(t.iconKey)}</span>
+                  <span className="relative flex-1 min-w-0">
                     <span className="text-xs font-medium block truncate">{t.label}</span>
                     {disabled && (
                       <span className="text-[10px] inline-flex items-center gap-1 mt-0.5 text-[color:var(--fg-faint)]">
@@ -72,10 +86,10 @@ export function BuildShell() {
                       </span>
                     )}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
-          </div>
+          </Stagger>
         </Card>
 
         {/* ─── Main: form ─────────────────────────────────── */}

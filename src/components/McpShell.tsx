@@ -1,12 +1,12 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ServerCog,
   Plus,
   Trash2,
   Pencil,
   Power,
-  ChevronDown,
   ChevronRight,
   AlertTriangle,
   ShieldCheck,
@@ -19,6 +19,7 @@ import {
   Info,
 } from "lucide-react";
 import { Card, Select, Textarea, Toggle } from "./primitives";
+import { Reveal, EASE_OUT, SPRING } from "./motion";
 
 type Scope = "user" | "local" | "project";
 type Transport = "stdio" | "http" | "sse" | "ws";
@@ -119,7 +120,7 @@ export function McpShell({ projectDir }: { projectDir: string }) {
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 py-7 space-y-5">
-      <div className="flex items-start justify-between gap-4">
+      <Reveal className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-sm font-semibold tracking-tight flex items-center gap-2">
             <ServerCog size={15} className="text-[color:var(--accent)]" />
@@ -131,13 +132,18 @@ export function McpShell({ projectDir }: { projectDir: string }) {
             <span className="font-mono text-[color:var(--fg-muted)]">{projectDir || "(no project set)"}</span>.
           </p>
         </div>
-        <button
+        <motion.button
           onClick={() => setAdding((v) => !v)}
+          whileTap={{ scale: 0.95 }}
+          transition={SPRING}
           className="inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition shrink-0"
         >
-          <Plus size={13} /> Add server
-        </button>
-      </div>
+          <motion.span animate={{ rotate: adding ? 45 : 0 }} transition={SPRING} className="inline-flex">
+            <Plus size={13} />
+          </motion.span>
+          Add server
+        </motion.button>
+      </Reveal>
 
       {/* Context-saving explainer */}
       <Card className="px-4 py-3 flex items-start gap-2.5">
@@ -151,17 +157,27 @@ export function McpShell({ projectDir }: { projectDir: string }) {
         </p>
       </Card>
 
-      {adding && (
-        <AddEditPanel
-          mode="add"
-          projectDir={projectDir}
-          onClose={() => setAdding(false)}
-          onSaved={() => {
-            setAdding(false);
-            refresh();
-          }}
-        />
-      )}
+      <AnimatePresence initial={false}>
+        {adding && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <AddEditPanel
+              mode="add"
+              projectDir={projectDir}
+              onClose={() => setAdding(false)}
+              onSaved={() => {
+                setAdding(false);
+                refresh();
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {servers === null ? (
         <Card className="p-10 text-center text-xs text-[color:var(--fg-muted)]">Loading MCP servers…</Card>
@@ -231,15 +247,19 @@ function ServerCard({
   const base = { scope: s.scope, name: s.name };
 
   return (
-    <Card className={`px-3.5 py-3 ${!s.enabled ? "opacity-70" : ""}`}>
+    <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={EASE_OUT}>
+    <Card className={`px-3.5 py-3 transition-opacity ${!s.enabled ? "opacity-70" : ""}`}>
       <div className="flex items-start gap-3">
-        <button
+        <motion.button
           onClick={() => setExpanded((e) => !e)}
+          whileTap={{ scale: 0.8 }}
           className="mt-0.5 text-[color:var(--fg-faint)] hover:text-[color:var(--fg)] transition shrink-0"
           aria-label={expanded ? "Collapse" : "Expand"}
         >
-          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        </button>
+          <motion.span animate={{ rotate: expanded ? 90 : 0 }} transition={SPRING} className="inline-flex">
+            <ChevronRight size={14} />
+          </motion.span>
+        </motion.button>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -284,17 +304,20 @@ function ServerCard({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <button
+          <motion.button
             onClick={() => onAct({ action: s.enabled ? "disable" : "enable", ...base })}
             title={s.enabled ? "Disable (stash & unload)" : "Enable (restore)"}
-            className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition ${
+            whileTap={{ scale: 0.84 }}
+            whileHover={{ scale: 1.1 }}
+            transition={SPRING}
+            className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors ${
               s.enabled
                 ? "text-[color:var(--fg-muted)] hover:text-[color:var(--warning)] hover:bg-[color:var(--warning)]/10"
                 : "text-[color:var(--success)] hover:bg-[color:var(--success)]/10"
             }`}
           >
             <Power size={14} />
-          </button>
+          </motion.button>
           <button
             onClick={() => setEditing((v) => !v)}
             title="Edit JSON"
@@ -345,7 +368,15 @@ function ServerCard({
         </div>
       )}
 
+      <AnimatePresence initial={false}>
       {expanded && !editing && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="overflow-hidden"
+        >
         <div className="mt-3 pt-3 border-t border-[color:var(--border)] space-y-3 pl-[26px]">
           {/* Auth / diagnostics */}
           <div>
@@ -378,8 +409,11 @@ function ServerCard({
             </div>
           </div>
         </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </Card>
+    </motion.div>
   );
 }
 

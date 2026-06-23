@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import {
   FolderOpen,
   Globe,
@@ -24,6 +24,7 @@ import {
   Library,
   FolderGit2,
   LayoutDashboard,
+  Network,
 } from "lucide-react";
 import { tabs, type TabDef, type TabFile } from "@/lib/tabs";
 import type { Scope, FileTarget } from "@/lib/paths";
@@ -42,14 +43,16 @@ import { LibraryShell } from "./LibraryShell";
 import { ProjectsShell } from "./ProjectsShell";
 import { DashboardShell } from "./DashboardShell";
 import { McpShell } from "./McpShell";
+import { OrchestratorShell } from "./OrchestratorShell";
 import { InfoIcon, Tooltip } from "./Tooltip";
 
-type View = "home" | "config" | "projects" | "mcp" | "build" | "library";
+type View = "home" | "config" | "projects" | "mcp" | "orchestrator" | "build" | "library";
 const NAV: { v: View; label: string; Icon: typeof SettingsIcon }[] = [
   { v: "home", label: "Home", Icon: LayoutDashboard },
   { v: "config", label: "Config", Icon: SettingsIcon },
   { v: "projects", label: "Projects", Icon: FolderGit2 },
   { v: "mcp", label: "MCP", Icon: ServerCog },
+  { v: "orchestrator", label: "Orchestrator", Icon: Network },
   { v: "build", label: "Build", Icon: Wrench },
   { v: "library", label: "Library", Icon: Library },
 ];
@@ -323,6 +326,7 @@ export function AppShell() {
   const dirtyCount = Object.values(fileStates).filter((s) => s.dirty).length;
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen flex flex-col">
       {/* ─── Header ───────────────────────────────────────── */}
       <header className="border-b border-[color:var(--border)] backdrop-blur-md bg-[color:var(--bg)]/80 sticky top-0 z-20">
@@ -347,9 +351,11 @@ export function AppShell() {
               {NAV.map(({ v, label, Icon }) => {
                 const active = view === v;
                 return (
-                  <button
+                  <motion.button
                     key={v}
                     onClick={() => setView(v)}
+                    whileTap={{ scale: 0.93 }}
+                    transition={{ type: "spring", stiffness: 600, damping: 30 }}
                     className="relative px-3 py-1 text-xs font-medium inline-flex items-center gap-1.5 z-10"
                   >
                     {active && (
@@ -364,10 +370,17 @@ export function AppShell() {
                         active ? "text-black" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
                       }`}
                     >
-                      <Icon size={12} />
+                      <motion.span
+                        initial={false}
+                        animate={{ rotate: active ? [0, -8, 0] : 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="inline-flex"
+                      >
+                        <Icon size={12} />
+                      </motion.span>
                       {label}
                     </span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -401,9 +414,22 @@ export function AppShell() {
                 </>
               }
             >
-              <button
+              {/* role="switch" on the wrapper (not a <button>) so the Toggle —
+                  itself a <button> — isn't nested in a button, and a single
+                  click toggles once instead of twice. */}
+              <div
+                role="switch"
+                aria-checked={autosave}
+                aria-label="Autosave"
+                tabIndex={0}
                 onClick={() => setAutosave(!autosave)}
-                className="flex items-center gap-2 px-2.5 py-1 rounded-md hover:bg-[color:var(--bg-elev-2)] transition"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setAutosave(!autosave);
+                  }
+                }}
+                className="flex items-center gap-2 px-2.5 py-1 rounded-md hover:bg-[color:var(--bg-elev-2)] transition cursor-pointer select-none"
               >
                 <Zap
                   size={12}
@@ -420,8 +446,11 @@ export function AppShell() {
                 >
                   Autosave
                 </span>
-                <Toggle checked={autosave} onChange={setAutosave} />
-              </button>
+                {/* visual only — the wrapper owns the click & a11y */}
+                <span className="pointer-events-none" aria-hidden="true">
+                  <Toggle checked={autosave} onChange={setAutosave} />
+                </span>
+              </div>
             </Tooltip>
             )}
             <a
@@ -437,10 +466,20 @@ export function AppShell() {
       </header>
 
       <main className="flex-1">
+        <AnimatePresence mode="wait">
+        <motion.div
+          key={view}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        >
         {view === "home" ? (
           <DashboardShell onNavigate={(v) => setView(v)} />
         ) : view === "mcp" ? (
           <McpShell projectDir={projectDir} />
+        ) : view === "orchestrator" ? (
+          <OrchestratorShell projectDir={projectDir} />
         ) : view === "build" ? (
           <BuildShell />
         ) : view === "projects" ? (
@@ -669,6 +708,8 @@ export function AppShell() {
           <StartupHelper />
         </div>
         )}
+        </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* ─── Toast ──────────────────────────────────────────── */}
@@ -695,6 +736,7 @@ export function AppShell() {
         )}
       </AnimatePresence>
     </div>
+    </MotionConfig>
   );
 }
 

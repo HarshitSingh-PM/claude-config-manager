@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Card } from "./primitives";
+import { Reveal, Stagger, AnimatedNumber, fadeUp, SPRING } from "./motion";
 
 type ItemType = "agent" | "command" | "skill" | "output-style";
 
@@ -116,6 +117,7 @@ export function LibraryShell({
   return (
     <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-5">
       {/* ─── Intro banner ─────────────────────────────────── */}
+      <Reveal>
       <Card className="p-4 flex items-start gap-3 bg-gradient-to-br from-[color:var(--accent-soft)]/30 to-transparent border-[color:var(--accent)]/30">
         <div className="h-9 w-9 shrink-0 rounded-lg bg-[color:var(--accent)] text-black flex items-center justify-center">
           <Sparkles size={16} />
@@ -136,34 +138,45 @@ export function LibraryShell({
           </p>
         </div>
       </Card>
+      </Reveal>
 
       {/* ─── Counter cards ────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-3" stagger={0.06}>
         {(Object.keys(TYPE_META) as ItemType[]).map((t) => {
           const meta = TYPE_META[t];
           const count = data?.counts[t] ?? 0;
           const isActive = typeFilter === t;
           return (
-            <button
+            <motion.button
               key={t}
+              variants={fadeUp}
               onClick={() => setTypeFilter(isActive ? "all" : t)}
-              className={`group text-left p-3 rounded-xl border transition ${
+              whileHover={{ y: -3 }}
+              whileTap={{ scale: 0.98 }}
+              transition={SPRING}
+              className={`group text-left p-3 rounded-xl border surface-interactive ${
                 isActive
                   ? "border-[color:var(--accent)]/50 bg-[color:var(--accent-soft)]/40"
-                  : "border-[color:var(--border)] hover:border-[color:var(--border-strong)] bg-[color:var(--bg-elev)]/40"
+                  : "border-[color:var(--border)] bg-[color:var(--bg-elev)]/40"
               }`}
             >
               <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-[color:var(--fg-muted)] mb-1.5">
-                <span style={{ color: meta.color }}>{meta.icon}</span>
+                <motion.span
+                  style={{ color: meta.color }}
+                  animate={isActive ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  {meta.icon}
+                </motion.span>
                 {meta.label}
               </div>
               <div className="text-2xl font-semibold tracking-tight">
-                {loading ? "—" : count}
+                {loading ? "—" : <AnimatedNumber value={count} />}
               </div>
-            </button>
+            </motion.button>
           );
         })}
-      </div>
+      </Stagger>
 
       {/* ─── Search + filter ──────────────────────────────── */}
       <div className="flex flex-wrap gap-2 items-center">
@@ -255,8 +268,10 @@ function ItemRow({ item, onOpen }: { item: Item; onOpen: () => void }) {
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
+      whileHover={{ x: 4 }}
+      transition={{ type: "spring", stiffness: 500, damping: 34 }}
       onClick={onOpen}
-      className="w-full text-left px-4 py-3 hover:bg-[color:var(--bg-elev-2)]/50 transition group"
+      className="w-full text-left px-4 py-3 hover:bg-[color:var(--bg-elev-2)]/50 transition-colors group"
     >
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
@@ -277,7 +292,7 @@ function ItemRow({ item, onOpen }: { item: Item; onOpen: () => void }) {
           )}
         </div>
         <div className="shrink-0 inline-flex items-center gap-1 text-[10px] text-[color:var(--fg-faint)] group-hover:text-[color:var(--accent)] transition">
-          Edit <ExternalLink size={10} />
+          Edit <ExternalLink size={10} className="group-hover:translate-x-0.5 transition-transform" />
         </div>
       </div>
     </motion.button>
