@@ -116,6 +116,9 @@ The **Orchestrator** tab is a live, visual team board for running Claude agents.
 
 - **See what's already running** — the board's "Running on this machine" section discovers the claude sessions you didn't launch here (terminals, other Claude Code windows) by counting live `claude` processes and tailing recent session transcripts, showing each one's current activity, model, project, and a `claude --resume` command. These are observed read-only.
 - **Launch agents individually** — pick the general agent or any of your subagent definitions (from `~/.claude/agents` and the project's `.claude/agents`), choose the model, permission mode, working directory, and a turn cap, then give it a task. Fire off as many as you like.
+- **Launch a team** — flip the panel to **Team** mode and pick a template (Build squad / Ship crew / Research pod / Bug hunt) or a custom set of roles. Run it **orchestrated** (one lead agent delegates to the roles, shown as one card with the hierarchy) or **parallel** (one agent per role, grouped on the board).
+- **Campaigns** — for multi-week work, create a campaign with an objective and a self-updating plan. Hit **Run next session** whenever you like; each session seeds a fresh agent with the saved plan + recent progress, does a chunk, and writes the plan back — so it survives app restarts and picks up exactly where it left off.
+- **Continue / resume** — any finished run (and any observed terminal session) has a **Continue** action that resumes it with `claude -p --resume <session>`, carrying full prior context.
 - **See the hierarchy** — every tool call, skill, MCP call, and **spawned sub-agent** is rendered as a colour-coded tree as it happens (sub-agents nest under the agent that delegated to them). Pick a subagent at launch and it's delegated to, so the hierarchy shows up on the board.
 - **Track each agent live** — current activity, elapsed time, running cost, tokens, turns, and sub-agent count per card; a global **Skill activity** feed shows which skills/tools are firing across all agents.
 - **Measurement** — a metrics view aggregates finished runs: success rate, total cost and tokens, breakdowns by agent and model, and top skills/tools. Run history persists across restarts.
@@ -123,6 +126,12 @@ The **Orchestrator** tab is a live, visual team board for running Claude agents.
 Under the hood it spawns headless `claude -p … --output-format stream-json` processes and parses the event stream — no extra dependencies, using your already-authenticated `claude` CLI. Stop any agent mid-run, and grab a `claude --resume <session>` command to pick a run back up in your terminal.
 
 > Permission modes map to the CLI: **Plan** (read-only, makes no changes), **Accept edits** (does the work — the default), **Auto** (model decides per call), or **Full auto** (skips every check — only for fully trusted tasks). Requires the `claude` CLI on your `PATH` (or set `CLAUDE_BIN`).
+
+---
+
+## Interface & motion
+
+The whole app is built to feel alive and readable: animated view transitions, staggered entrances, hover-lift cards, count-up metrics, animated expand/collapse, and skeleton loaders — all of which honour `prefers-reduced-motion`. Status is colour-coded like a traffic light — **green** for live / running / healthy, **red** for errors / failures, **amber** for pending / needs-review — so you can read state at a glance.
 
 ---
 
