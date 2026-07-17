@@ -35,6 +35,8 @@ const nextConfig: NextConfig = {
     "/api/logic-instruction": HEAVY_EXCLUDES,
     "/api/orchestrator": HEAVY_EXCLUDES,
     "/api/orchestrator/stream": HEAVY_EXCLUDES,
+    "/api/transfer/export": HEAVY_EXCLUDES,
+    "/api/transfer/import": HEAVY_EXCLUDES,
     "/api/orchestrator/live-sessions": HEAVY_EXCLUDES,
   },
 };

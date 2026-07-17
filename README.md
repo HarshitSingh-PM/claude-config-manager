@@ -129,6 +129,17 @@ Under the hood it spawns headless `claude -p … --output-format stream-json` pr
 
 ---
 
+## Transfer — move your setup to another machine
+
+The **Transfer** tab packs your whole Claude world into one encrypted `.ccsync` file and restores it on another laptop.
+
+- **What goes in** — pick from live-counted categories: `~/.claude.json` (MCP servers with their API keys), settings, global `CLAUDE.md`, agents, skills, commands, keybindings, per-project auto-memory, and this app's own data (orchestrator history, campaigns). Add any extra files or folders under your home directory — `.env` files ride along too.
+- **Real encryption** — the bundle is sealed with AES-256-GCM; the key is derived from your passphrase with scrypt. Nothing readable leaves your machine, so the file is safe to move over AirDrop, iCloud Drive, or a USB stick.
+- **Safe restore** — on the other laptop, run `npx claude-config-ui`, open Transfer, and unlock the bundle. You get a per-file preview (new / changed / identical) with new-and-changed pre-selected; anything you overwrite is backed up first to `~/.claude-config-ui/transfer-backups/<timestamp>/`. Restores refuse paths outside your home directory.
+- **Login stays out on purpose** — the Claude OAuth token is per-machine and refreshes, so it isn't bundled. Run `claude` and `/login` once on the new laptop; your subscription covers multiple machines.
+
+---
+
 ## Interface & motion
 
 The whole app is built to feel alive and readable: animated view transitions, staggered entrances, hover-lift cards, count-up metrics, animated expand/collapse, and skeleton loaders — all of which honour `prefers-reduced-motion`. Status is colour-coded like a traffic light — **green** for live / running / healthy, **red** for errors / failures, **amber** for pending / needs-review — so you can read state at a glance.

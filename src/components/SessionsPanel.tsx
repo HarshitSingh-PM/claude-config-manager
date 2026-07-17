@@ -103,6 +103,13 @@ async function deleteSession(s: Session) {
 
 type SortKey = "modified" | "created" | "messages" | "name" | "size";
 
+// Rows rendered before "Show more". Keeps the DOM small — rendering many
+// hundreds of animated, backdrop-blurred cards at once makes every click in
+// the view janky.
+const PAGE_SIZE = 50;
+// Only the first screenful gets an entrance animation; the rest mount plain.
+const ANIMATED_ROWS = 24;
+
 export function SessionsView({
   sessions,
   projects,
@@ -117,6 +124,7 @@ export function SessionsView({
   scopeProjectPath?: string; // when set, hide the project column (already scoped)
 }) {
   const [sort, setSort] = useState<SortKey>("modified");
+  const [shown, setShown] = useState(PAGE_SIZE);
 
   const sorted = useMemo(() => {
     const arr = [...sessions];
@@ -168,15 +176,32 @@ export function SessionsView({
         </Card>
       ) : (
         <div className="space-y-2">
-          {sorted.map((s) => (
+          {sorted.slice(0, shown).map((s, i) => (
             <SessionRow
               key={s.filePath}
               session={s}
               projects={projects}
               hideProject={Boolean(scopeProjectPath)}
               onMutate={onMutate}
+              animate={i < ANIMATED_ROWS}
             />
           ))}
+          {sorted.length > shown && (
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <button
+                onClick={() => setShown((n) => n + 150)}
+                className="text-[11px] px-3 h-7 rounded-md border border-[color:var(--border)] text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] hover:border-[color:var(--border-strong)] transition"
+              >
+                Show more
+              </button>
+              <button
+                onClick={() => setShown(sorted.length)}
+                className="text-[11px] text-[color:var(--fg-faint)] hover:text-[color:var(--fg-muted)] transition"
+              >
+                Show all {sorted.length}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -188,11 +213,13 @@ function SessionRow({
   projects,
   hideProject,
   onMutate,
+  animate = true,
 }: {
   session: Session;
   projects: ProjectRef[];
   hideProject?: boolean;
   onMutate: () => void;
+  animate?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -228,8 +255,15 @@ function SessionRow({
     onMutate();
   };
 
+  // No `layout` prop here on purpose: layout tracking across hundreds of
+  // sibling rows forces framer-motion to re-measure the whole list on every
+  // render, which is what made the view feel laggy.
   return (
-    <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={EASE_OUT}>
+    <motion.div
+      initial={animate ? { opacity: 0, y: 6 } : false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={EASE_OUT}
+    >
     <Card className="px-3 py-2.5">
       <div className="flex items-start gap-2.5">
         <motion.button

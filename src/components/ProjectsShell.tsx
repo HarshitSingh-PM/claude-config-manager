@@ -132,6 +132,7 @@ export function ProjectsShell() {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProjects(null);
     fetch("/api/projects")
       .then((r) => r.json())
@@ -152,6 +153,7 @@ export function ProjectsShell() {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRawSessions(null);
     fetch("/api/sessions")
       .then((r) => r.json())
@@ -422,6 +424,7 @@ function ContextSettings({
   const [logicPath, setLogicPath] = useState<string>("");
   const [togglingLogic, setTogglingLogic] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setDraft(vaultRoot), [vaultRoot]);
 
   useEffect(() => {
@@ -563,6 +566,7 @@ function ProjectDetail({
   const [activeFile, setActiveFile] = useState<ProjectFile | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveFile(null);
   }, [project.path]);
 
@@ -702,6 +706,7 @@ function FileEditor({ file, onChanged }: { file: ProjectFile; onChanged: () => v
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     fetch(`/api/file?path=${encodeURIComponent(file.absolutePath)}`)
       .then((r) => r.json())

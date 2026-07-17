@@ -25,6 +25,7 @@ import {
   FolderGit2,
   LayoutDashboard,
   Network,
+  ArrowLeftRight,
 } from "lucide-react";
 import { tabs, type TabDef, type TabFile } from "@/lib/tabs";
 import type { Scope, FileTarget } from "@/lib/paths";
@@ -44,15 +45,17 @@ import { ProjectsShell } from "./ProjectsShell";
 import { DashboardShell } from "./DashboardShell";
 import { McpShell } from "./McpShell";
 import { OrchestratorShell } from "./OrchestratorShell";
+import TransferShell from "./TransferShell";
 import { InfoIcon, Tooltip } from "./Tooltip";
 
-type View = "home" | "config" | "projects" | "mcp" | "orchestrator" | "build" | "library";
+type View = "home" | "config" | "projects" | "mcp" | "orchestrator" | "transfer" | "build" | "library";
 const NAV: { v: View; label: string; Icon: typeof SettingsIcon }[] = [
   { v: "home", label: "Home", Icon: LayoutDashboard },
   { v: "config", label: "Config", Icon: SettingsIcon },
   { v: "projects", label: "Projects", Icon: FolderGit2 },
   { v: "mcp", label: "MCP", Icon: ServerCog },
   { v: "orchestrator", label: "Orchestrator", Icon: Network },
+  { v: "transfer", label: "Transfer", Icon: ArrowLeftRight },
   { v: "build", label: "Build", Icon: Wrench },
   { v: "library", label: "Library", Icon: Library },
 ];
@@ -469,10 +472,10 @@ export function AppShell() {
         <AnimatePresence mode="wait">
         <motion.div
           key={view}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
         >
         {view === "home" ? (
           <DashboardShell onNavigate={(v) => setView(v)} />
@@ -480,6 +483,8 @@ export function AppShell() {
           <McpShell projectDir={projectDir} />
         ) : view === "orchestrator" ? (
           <OrchestratorShell projectDir={projectDir} />
+        ) : view === "transfer" ? (
+          <TransferShell />
         ) : view === "build" ? (
           <BuildShell />
         ) : view === "projects" ? (

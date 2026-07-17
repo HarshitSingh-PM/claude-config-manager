@@ -44,6 +44,13 @@ export type ScannedSession = SessionScan & {
 
 const scanCache = new Map<string, { key: string; data: SessionScan }>();
 
+// Whole-tree result cache. A view mount fires /api/dashboard, /api/sessions
+// and /api/projects together, and an actively-running Claude session appends
+// to its transcript constantly — without a TTL each of those requests re-reads
+// the changed multi-MB file. Within the TTL they all share one scan.
+const SCAN_TTL_MS = 5000;
+let lastScan: { at: number; result: ScannedSession[] } | null = null;
+
 function looksLikeNoise(text: string): boolean {
   const t = text.trimStart();
   if (!t) return true;
@@ -134,6 +141,7 @@ async function scanSession(filePath: string, home: string): Promise<SessionScan>
 }
 
 export async function scanAllSessions(): Promise<ScannedSession[]> {
+  if (lastScan && Date.now() - lastScan.at < SCAN_TTL_MS) return lastScan.result;
   const home = os.homedir();
   const root = sessionsRoot();
   let dirs: string[] = [];
@@ -180,9 +188,13 @@ export async function scanAllSessions(): Promise<ScannedSession[]> {
     }),
   );
 
-  return nested.flat().filter((s): s is ScannedSession => s !== null);
+  const result = nested.flat().filter((s): s is ScannedSession => s !== null);
+  lastScan = { at: Date.now(), result };
+  return result;
 }
 
 export function dropFromCache(filePath: string) {
   scanCache.delete(filePath);
+  // A session was just deleted — the TTL'd tree result would still list it.
+  lastScan = null;
 }

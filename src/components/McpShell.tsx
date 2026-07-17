@@ -18,7 +18,7 @@ import {
   Zap,
   Info,
 } from "lucide-react";
-import { Card, Select, Textarea, Toggle } from "./primitives";
+import { Card, Select, Textarea } from "./primitives";
 import { Reveal, EASE_OUT, SPRING } from "./motion";
 
 type Scope = "user" | "local" | "project";
@@ -86,6 +86,7 @@ export function McpShell({ projectDir }: { projectDir: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setServers(null);
     fetch(`/api/mcp?projectDir=${encodeURIComponent(projectDir)}`)
       .then((r) => r.json())
