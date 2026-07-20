@@ -13,6 +13,7 @@
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const fsSync = require("node:fs");
+const { execFileSync } = require("node:child_process");
 
 exports.default = async (context) => {
   const { appOutDir, packager } = context;
@@ -42,4 +43,24 @@ exports.default = async (context) => {
 
   // eslint-disable-next-line no-console
   console.log(`  ✓ afterPack: standalone copied verbatim → ${dst}`);
+
+  // macOS: electron-builder is configured with `identity: null`, so it does NOT
+  // sign the bundle — the .app keeps the stale ad-hoc seal from the prebuilt
+  // Electron binary. Once we rename that binary and inject the asar + the
+  // standalone tree above, the bundle no longer matches that seal, so
+  // `codesign --verify` fails and macOS reports the app as
+  // "damaged and can't be opened" — which right-click → Open cannot bypass.
+  //
+  // Re-sign the whole bundle ad-hoc so the seal is valid and consistent. This
+  // does NOT make the app notarized (that needs a paid Developer ID); it just
+  // downgrades Gatekeeper from the fatal "damaged" verdict to the ordinary
+  // "unidentified developer" prompt, which users can clear via right-click →
+  // Open or `xattr -dr com.apple.quarantine`. See README → Install on macOS.
+  if (context.electronPlatformName === "darwin") {
+    execFileSync("codesign", ["--force", "--deep", "--sign", "-", appBundle], {
+      stdio: "inherit",
+    });
+    // eslint-disable-next-line no-console
+    console.log(`  ✓ afterPack: ad-hoc re-signed ${productName}.app`);
+  }
 };

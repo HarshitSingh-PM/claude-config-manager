@@ -34,7 +34,18 @@ Download from the [latest release](https://github.com/HarshitSingh-PM/claude-con
 
 Open the `.dmg`, drag **Claude Config** to **Applications**, launch from Spotlight or Launchpad.
 
-> **First launch (one time):** macOS Gatekeeper will block the unsigned app. **Right-click → Open** the first time, then click **Open** in the dialog. After that it launches normally. (Or run `xattr -dr com.apple.quarantine "/Applications/Claude Config.app"` once.)
+> **First launch (one time):** the app is signed ad-hoc but not notarized (no paid Apple Developer certificate), so macOS Gatekeeper blocks it the first time. **Right-click the app → Open**, then click **Open** in the dialog — after that it launches normally. Or clear the quarantine flag once:
+>
+> ```bash
+> xattr -dr com.apple.quarantine "/Applications/Claude Config.app"
+> ```
+>
+> **If macOS says the app is "damaged and can't be opened"** — builds through v0.9.0 shipped with an invalid code-signature seal, so right-click → Open won't help. Repair it once with:
+>
+> ```bash
+> xattr -dr com.apple.quarantine "/Applications/Claude Config.app"
+> codesign --force --deep --sign - "/Applications/Claude Config.app"
+> ```
 
 ### Windows app
 
