@@ -24,7 +24,7 @@ export function Card({
       ? "rounded-[var(--radius)] border-gradient shadow-[var(--shadow-md)]"
       : variant === "elevated"
         ? "rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)] shadow-[var(--shadow-lg)] surface-hi"
-        : "rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)]/80 backdrop-blur-md surface-hi shadow-[var(--shadow-md)]";
+        : "rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)] surface-hi shadow-[var(--shadow-md)]";
   if (interactive || onClick) {
     return (
       <motion.div
@@ -91,13 +91,13 @@ export function Button({
   }[size];
   const variants = {
     primary:
-      "text-[#04120c] font-semibold bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] hover:brightness-110 shadow-[0_4px_16px_var(--accent-glow)]",
+      "font-semibold text-[color:var(--primary-ink)] bg-[color:var(--primary)] hover:bg-[#e6e6e8] shadow-[var(--shadow-sm)]",
     secondary:
-      "font-medium text-[color:var(--fg)] bg-[color:var(--bg-elev-2)] border border-[color:var(--border-strong)] hover:border-[color:var(--accent)]/50 hover:bg-[color:var(--bg-elev-3)]",
+      "font-medium text-[color:var(--fg)] bg-[color:var(--bg-elev-2)] border border-[color:var(--border-strong)] hover:border-[color:var(--accent)]/60 hover:bg-[color:var(--bg-elev-3)]",
     ghost:
       "font-medium text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] hover:bg-[color:var(--bg-elev-2)]",
     danger:
-      "font-medium text-[color:var(--danger)] border border-[color:var(--danger)]/40 hover:bg-[color:var(--danger)]/12",
+      "font-medium text-[color:var(--danger)] border border-[color:var(--danger)]/45 hover:bg-[color:var(--danger)]/12",
   }[variant];
   return (
     <motion.button
@@ -218,18 +218,18 @@ export function Toggle({
       whileTap={{ scale: 0.92 }}
       transition={{ type: "spring", stiffness: 600, damping: 30 }}
       className={cn(
-        "relative h-[22px] w-10 rounded-full transition-colors shrink-0",
+        "relative h-[22px] w-10 rounded-[5px] transition-colors shrink-0",
         checked
-          ? "bg-[linear-gradient(100deg,var(--accent),var(--accent-2))]"
-          : "bg-[color:var(--border-strong)] hover:bg-[#3f4552]",
+          ? "bg-[color:var(--accent)]"
+          : "bg-[color:var(--border-strong)] hover:bg-[#4a4a52]",
       )}
     >
       <motion.span
         layout
         transition={{ type: "spring", stiffness: 600, damping: 40 }}
         className={cn(
-          "absolute top-[3px] inline-block h-4 w-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.5)]",
-          checked ? "left-[21px]" : "left-[3px]",
+          "absolute top-[3px] inline-block h-4 w-4 rounded-[3px] shadow-[0_1px_3px_rgba(0,0,0,0.5)]",
+          checked ? "left-[21px] bg-[color:var(--accent-ink)]" : "left-[3px] bg-white",
         )}
       />
     </motion.button>
@@ -283,7 +283,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-md border",
+        "inline-flex items-center font-mono text-[10.5px] font-medium tracking-[0.08em] uppercase px-1.5 py-0.5 rounded-[3px] border",
         colors[tone],
       )}
     >
@@ -310,7 +310,7 @@ export function IconButton({
       "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] hover:bg-[color:var(--bg-elev-2)]",
     danger: "text-[color:var(--danger)] hover:bg-[color:var(--danger)]/12",
     primary:
-      "text-[#04120c] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] hover:brightness-110",
+      "text-[color:var(--accent-ink)] bg-[color:var(--accent)] hover:bg-[color:var(--accent-strong)]",
   }[variant];
   return (
     <motion.button

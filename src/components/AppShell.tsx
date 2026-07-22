@@ -356,20 +356,20 @@ export function AppShell() {
               initial={{ rotate: -8, scale: 0.85, opacity: 0 }}
               animate={{ rotate: 0, scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="relative h-9 w-9 rounded-[11px] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] flex items-center justify-center text-[#04120c] font-bold text-base shadow-[0_4px_18px_var(--accent-glow)]"
+              className="relative h-9 w-9 rounded-[7px] bg-[color:var(--primary)] flex items-center justify-center text-[color:var(--primary-ink)] shadow-[var(--shadow-md)]"
             >
-              <TerminalSquare size={18} strokeWidth={2.4} />
+              <TerminalSquare size={18} strokeWidth={2.6} />
             </motion.div>
             <div className="leading-none">
-              <h1 className="text-[15px] font-semibold tracking-tight text-[color:var(--fg)]">
+              <h1 className="text-[15px] font-semibold tracking-[-0.02em] text-[color:var(--fg)]">
                 Claude Config
               </h1>
-              <p className="t-eyebrow text-[color:var(--fg-faint)] mt-1">Control Center</p>
+              <p className="t-eyebrow text-[color:var(--fg-faint)] mt-1.5">Control Center</p>
             </div>
           </div>
 
           {/* Primary nav */}
-          <nav className="relative inline-flex items-center gap-0.5 rounded-[14px] border border-[color:var(--border)] bg-[color:var(--bg-elev-2)]/50 p-1 backdrop-blur-sm overflow-x-auto">
+          <nav className="relative inline-flex items-center gap-0.5 rounded-[9px] border border-[color:var(--border)] bg-[color:var(--bg-elev-2)] p-1 overflow-x-auto">
             {NAV.map(({ v, label, Icon }) => {
               const active = view === v;
               return (
@@ -378,18 +378,18 @@ export function AppShell() {
                   onClick={() => setView(v)}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                  className="relative z-10 inline-flex items-center gap-1.5 px-3.5 h-9 rounded-[10px] text-[13px] font-medium whitespace-nowrap"
+                  className="relative z-10 inline-flex items-center gap-1.5 px-3.5 h-9 rounded-[6px] text-[13px] font-medium whitespace-nowrap"
                 >
                   {active && (
                     <motion.div
                       layoutId="primary-nav-pill"
-                      className="absolute inset-0 rounded-[10px] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] shadow-[0_3px_14px_var(--accent-glow)]"
+                      className="absolute inset-0 rounded-[6px] bg-[color:var(--primary)] shadow-[var(--shadow-sm)]"
                       transition={{ type: "spring", stiffness: 480, damping: 34 }}
                     />
                   )}
                   <span
                     className={`relative inline-flex items-center gap-1.5 ${
-                      active ? "text-[#04120c]" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
+                      active ? "text-[color:var(--primary-ink)]" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
                     }`}
                   >
                     <Icon size={14} strokeWidth={active ? 2.5 : 2} />
