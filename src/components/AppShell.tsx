@@ -46,11 +46,25 @@ import { DashboardShell } from "./DashboardShell";
 import { McpShell } from "./McpShell";
 import { OrchestratorShell } from "./OrchestratorShell";
 import TransferShell from "./TransferShell";
+import TerminalShell from "./terminal/TerminalShell";
+import { UsageWidget } from "./UsageWidget";
+import { MotivationBanner } from "./MotivationBanner";
+import { MacPermissionsGate } from "./MacPermissionsGate";
 import { InfoIcon, Tooltip } from "./Tooltip";
 
-type View = "home" | "config" | "projects" | "mcp" | "orchestrator" | "transfer" | "build" | "library";
+type View =
+  | "home"
+  | "terminal"
+  | "config"
+  | "projects"
+  | "mcp"
+  | "orchestrator"
+  | "transfer"
+  | "build"
+  | "library";
 const NAV: { v: View; label: string; Icon: typeof SettingsIcon }[] = [
   { v: "home", label: "Home", Icon: LayoutDashboard },
+  { v: "terminal", label: "Claude Code", Icon: TerminalSquare },
   { v: "config", label: "Config", Icon: SettingsIcon },
   { v: "projects", label: "Projects", Icon: FolderGit2 },
   { v: "mcp", label: "MCP", Icon: ServerCog },
@@ -330,139 +344,133 @@ export function AppShell() {
 
   return (
     <MotionConfig reducedMotion="user">
+    <MotivationBanner />
+    <MacPermissionsGate />
     <div className="min-h-screen flex flex-col">
       {/* ─── Header ───────────────────────────────────────── */}
-      <header className="border-b border-[color:var(--border)] backdrop-blur-md bg-[color:var(--bg)]/80 sticky top-0 z-20">
-        <div className="max-w-[1280px] mx-auto px-6 py-3.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 border-b border-[color:var(--border)] bg-[color:var(--bg)]/70 backdrop-blur-xl shadow-[0_1px_0_0_var(--accent-soft)]">
+        <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center gap-5">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <motion.div
-              initial={{ rotate: -6, scale: 0.9 }}
-              animate={{ rotate: 0, scale: 1 }}
-              className="h-8 w-8 rounded-lg bg-gradient-to-br from-[color:var(--accent)] to-[color:var(--accent-2)] flex items-center justify-center text-black font-bold text-sm"
+              initial={{ rotate: -8, scale: 0.85, opacity: 0 }}
+              animate={{ rotate: 0, scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="relative h-9 w-9 rounded-[11px] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] flex items-center justify-center text-[#04120c] font-bold text-base shadow-[0_4px_18px_var(--accent-glow)]"
             >
-              C
+              <TerminalSquare size={18} strokeWidth={2.4} />
             </motion.div>
-            <div>
-              <h1 className="text-sm font-semibold tracking-tight">Claude Config Manager</h1>
-              <p className="text-[11px] text-[color:var(--fg-faint)]">
-                Local, open-source UI for Claude Code config files.
-              </p>
-            </div>
-
-            {/* ─── Primary nav: Config / Build / Library ─────── */}
-            <div className="ml-3 inline-flex items-center bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-lg p-0.5 relative">
-              {NAV.map(({ v, label, Icon }) => {
-                const active = view === v;
-                return (
-                  <motion.button
-                    key={v}
-                    onClick={() => setView(v)}
-                    whileTap={{ scale: 0.93 }}
-                    transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                    className="relative px-3 py-1 text-xs font-medium inline-flex items-center gap-1.5 z-10"
-                  >
-                    {active && (
-                      <motion.div
-                        layoutId="primary-nav-pill"
-                        className="absolute inset-0 bg-[color:var(--accent)] rounded-md"
-                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                      />
-                    )}
-                    <span
-                      className={`relative inline-flex items-center gap-1.5 ${
-                        active ? "text-black" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
-                      }`}
-                    >
-                      <motion.span
-                        initial={false}
-                        animate={{ rotate: active ? [0, -8, 0] : 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="inline-flex"
-                      >
-                        <Icon size={12} />
-                      </motion.span>
-                      {label}
-                    </span>
-                  </motion.button>
-                );
-              })}
+            <div className="leading-none">
+              <h1 className="text-[15px] font-semibold tracking-tight text-[color:var(--fg)]">
+                Claude Config
+              </h1>
+              <p className="t-eyebrow text-[color:var(--fg-faint)] mt-1">Control Center</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+
+          {/* Primary nav */}
+          <nav className="relative inline-flex items-center gap-0.5 rounded-[14px] border border-[color:var(--border)] bg-[color:var(--bg-elev-2)]/50 p-1 backdrop-blur-sm overflow-x-auto">
+            {NAV.map(({ v, label, Icon }) => {
+              const active = view === v;
+              return (
+                <motion.button
+                  key={v}
+                  onClick={() => setView(v)}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 600, damping: 30 }}
+                  className="relative z-10 inline-flex items-center gap-1.5 px-3.5 h-9 rounded-[10px] text-[13px] font-medium whitespace-nowrap"
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="primary-nav-pill"
+                      className="absolute inset-0 rounded-[10px] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] shadow-[0_3px_14px_var(--accent-glow)]"
+                      transition={{ type: "spring", stiffness: 480, damping: 34 }}
+                    />
+                  )}
+                  <span
+                    className={`relative inline-flex items-center gap-1.5 ${
+                      active ? "text-[#04120c]" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
+                    }`}
+                  >
+                    <Icon size={14} strokeWidth={active ? 2.5 : 2} />
+                    {label}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </nav>
+
+          {/* Right status cluster */}
+          <div className="ml-auto flex items-center gap-2.5 shrink-0">
             {view === "config" && paths && (
-              <span className="text-[11px] text-[color:var(--fg-muted)] inline-flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--success)]" />
-                Detected: <span className="font-mono">{paths.os.pretty}</span>
+              <span className="hidden lg:inline-flex items-center gap-1.5 t-label text-[color:var(--fg-muted)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--success)] shadow-[0_0_8px_var(--success)]" />
+                <span className="font-mono">{paths.os.pretty}</span>
               </span>
             )}
             {view === "config" && dirtyCount > 0 && (
-              <span className="text-[11px] text-[color:var(--warning)] inline-flex items-center gap-1.5">
-                <AlertTriangle size={11} />
+              <span className="inline-flex items-center gap-1.5 t-label font-medium text-[color:var(--warning)] px-2 py-1 rounded-md bg-[color:var(--warning)]/10 border border-[color:var(--warning)]/30">
+                <AlertTriangle size={12} />
                 {dirtyCount} unsaved
               </span>
             )}
             {view === "config" && (
-            <Tooltip
-              content={
-                <>
-                  Autosaves the active file 1.2 seconds after you stop typing.
-                  Enterprise tab is excluded.
-                </>
-              }
-              significance={
-                <>
-                  A timestamped <span className="font-mono">.bak-*</span> is made
-                  on the first save after loading a file. Subsequent autosaves
-                  write without a new backup so your folder stays clean.
-                </>
-              }
-            >
-              {/* role="switch" on the wrapper (not a <button>) so the Toggle —
-                  itself a <button> — isn't nested in a button, and a single
-                  click toggles once instead of twice. */}
-              <div
-                role="switch"
-                aria-checked={autosave}
-                aria-label="Autosave"
-                tabIndex={0}
-                onClick={() => setAutosave(!autosave)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setAutosave(!autosave);
-                  }
-                }}
-                className="flex items-center gap-2 px-2.5 py-1 rounded-md hover:bg-[color:var(--bg-elev-2)] transition cursor-pointer select-none"
+              <Tooltip
+                content={
+                  <>
+                    Autosaves the active file 1.2 seconds after you stop typing.
+                    Enterprise tab is excluded.
+                  </>
+                }
+                significance={
+                  <>
+                    A timestamped <span className="font-mono">.bak-*</span> is made
+                    on the first save after loading a file. Subsequent autosaves
+                    write without a new backup so your folder stays clean.
+                  </>
+                }
               >
-                <Zap
-                  size={12}
-                  className={
-                    autosave
-                      ? "text-[color:var(--accent)]"
-                      : "text-[color:var(--fg-faint)]"
-                  }
-                />
-                <span
-                  className={`text-[11px] font-medium ${
-                    autosave ? "text-[color:var(--accent)]" : "text-[color:var(--fg-muted)]"
-                  }`}
+                {/* role="switch" on the wrapper (not a <button>) so the Toggle —
+                    itself a <button> — isn't nested in a button. */}
+                <div
+                  role="switch"
+                  aria-checked={autosave}
+                  aria-label="Autosave"
+                  tabIndex={0}
+                  onClick={() => setAutosave(!autosave)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setAutosave(!autosave);
+                    }
+                  }}
+                  className="flex items-center gap-2 px-2.5 h-9 rounded-[10px] border border-[color:var(--border)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--bg-elev-2)] transition cursor-pointer select-none"
                 >
-                  Autosave
-                </span>
-                {/* visual only — the wrapper owns the click & a11y */}
-                <span className="pointer-events-none" aria-hidden="true">
-                  <Toggle checked={autosave} onChange={setAutosave} />
-                </span>
-              </div>
-            </Tooltip>
+                  <Zap
+                    size={13}
+                    className={autosave ? "text-[color:var(--accent)]" : "text-[color:var(--fg-faint)]"}
+                  />
+                  <span
+                    className={`t-label font-medium ${
+                      autosave ? "text-[color:var(--accent)]" : "text-[color:var(--fg-muted)]"
+                    }`}
+                  >
+                    Autosave
+                  </span>
+                  <span className="pointer-events-none" aria-hidden="true">
+                    <Toggle checked={autosave} onChange={setAutosave} />
+                  </span>
+                </div>
+              </Tooltip>
             )}
+            <UsageWidget />
             <a
-              href="https://github.com"
+              href="https://github.com/HarshitSingh-PM/claude-config-manager"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-[color:var(--fg-muted)] hover:text-[color:var(--accent)] transition"
+              className="inline-flex items-center gap-1.5 t-label font-medium text-[color:var(--fg-muted)] hover:text-[color:var(--accent)] transition px-2.5 h-9 rounded-[10px] hover:bg-[color:var(--bg-elev-2)]"
             >
-              <CodeSquare size={13} /> Source
+              <CodeSquare size={14} /> <span className="hidden sm:inline">Source</span>
             </a>
           </div>
         </div>
@@ -479,6 +487,8 @@ export function AppShell() {
         >
         {view === "home" ? (
           <DashboardShell onNavigate={(v) => setView(v)} />
+        ) : view === "terminal" ? (
+          <TerminalShell projectDir={projectDir} />
         ) : view === "mcp" ? (
           <McpShell projectDir={projectDir} />
         ) : view === "orchestrator" ? (

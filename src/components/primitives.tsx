@@ -8,16 +8,23 @@ export function Card({
   children,
   className,
   interactive,
+  variant = "default",
   onClick,
 }: {
   children: ReactNode;
   className?: string;
   /** Adds hover-lift + accent glow; use for clickable/navigational cards. */
   interactive?: boolean;
+  /** "elevated" = stronger surface/shadow; "gradient" = accent hairline border. */
+  variant?: "default" | "elevated" | "gradient";
   onClick?: () => void;
 }) {
   const base =
-    "rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 backdrop-blur-sm";
+    variant === "gradient"
+      ? "rounded-[var(--radius)] border-gradient shadow-[var(--shadow-md)]"
+      : variant === "elevated"
+        ? "rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)] shadow-[var(--shadow-lg)] surface-hi"
+        : "rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)]/80 backdrop-blur-md surface-hi shadow-[var(--shadow-md)]";
   if (interactive || onClick) {
     return (
       <motion.div
@@ -44,19 +51,79 @@ export function SectionHeader({
   right?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 mb-3">
+    <div className="flex items-start justify-between gap-3 mb-3.5">
       <div>
-        <h3 className="text-sm font-medium text-[color:var(--fg)]">{title}</h3>
+        <h3 className="t-title text-[color:var(--fg)]">{title}</h3>
         {description ? (
-          <p className="text-xs text-[color:var(--fg-muted)] mt-0.5 leading-relaxed">
-            {description}
-          </p>
+          <p className="t-small text-[color:var(--fg-muted)] mt-1 leading-relaxed">{description}</p>
         ) : null}
       </div>
       {right ? <div className="shrink-0">{right}</div> : null}
     </div>
   );
 }
+
+/* ─── Button: the shared action primitive ─────────────────────── */
+export function Button({
+  children,
+  onClick,
+  variant = "secondary",
+  size = "md",
+  disabled,
+  type = "button",
+  className,
+  title,
+  icon,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "sm" | "md";
+  disabled?: boolean;
+  type?: "button" | "submit";
+  className?: string;
+  title?: string;
+  icon?: ReactNode;
+}) {
+  const sizes = {
+    sm: "h-8 px-3 text-[13px] gap-1.5 rounded-[var(--radius-sm)]",
+    md: "h-9 px-3.5 text-sm gap-2 rounded-[var(--radius-sm)]",
+  }[size];
+  const variants = {
+    primary:
+      "text-[#04120c] font-semibold bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] hover:brightness-110 shadow-[0_4px_16px_var(--accent-glow)]",
+    secondary:
+      "font-medium text-[color:var(--fg)] bg-[color:var(--bg-elev-2)] border border-[color:var(--border-strong)] hover:border-[color:var(--accent)]/50 hover:bg-[color:var(--bg-elev-3)]",
+    ghost:
+      "font-medium text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] hover:bg-[color:var(--bg-elev-2)]",
+    danger:
+      "font-medium text-[color:var(--danger)] border border-[color:var(--danger)]/40 hover:bg-[color:var(--danger)]/12",
+  }[variant];
+  return (
+    <motion.button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      whileTap={disabled ? undefined : { scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 600, damping: 30 }}
+      className={cn(
+        "inline-flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100",
+        sizes,
+        variants,
+        className,
+      )}
+    >
+      {icon}
+      {children}
+    </motion.button>
+  );
+}
+
+const inputBase =
+  "w-full bg-[color:var(--bg-elev-2)] border border-[color:var(--border-strong)] rounded-[var(--radius-sm)] text-sm text-[color:var(--fg)] " +
+  "placeholder:text-[color:var(--fg-faint)] transition-colors " +
+  "hover:border-[color:var(--border-strong)] focus:border-[color:var(--accent)] focus:bg-[color:var(--bg-elev)]";
 
 export function TextInput({
   value,
@@ -76,13 +143,7 @@ export function TextInput({
       value={value}
       onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
       placeholder={placeholder}
-      className={cn(
-        "w-full bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-md px-3 py-1.5 text-sm",
-        "placeholder:text-[color:var(--fg-faint)]",
-        "focus:border-[color:var(--accent)] transition",
-        monospaced && "font-mono text-[12.5px]",
-        className,
-      )}
+      className={cn(inputBase, "px-3 py-2", monospaced && "font-mono text-[13px]", className)}
     />
   );
 }
@@ -112,7 +173,7 @@ export function NumberInput({
         if (s === "") onChange(undefined);
         else onChange(Number(s));
       }}
-      className="w-32 bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-md px-3 py-1.5 text-sm focus:border-[color:var(--accent)] transition"
+      className={cn(inputBase, "w-32 px-3 py-2")}
     />
   );
 }
@@ -136,11 +197,7 @@ export function Textarea({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className={cn(
-        "w-full bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-md px-3 py-2 text-sm",
-        "placeholder:text-[color:var(--fg-faint)] focus:border-[color:var(--accent)] transition resize-y",
-        monospaced && "font-mono text-[12.5px] leading-relaxed",
-      )}
+      className={cn(inputBase, "px-3 py-2.5 resize-y", monospaced && "font-mono text-[13px] leading-relaxed")}
     />
   );
 }
@@ -161,18 +218,18 @@ export function Toggle({
       whileTap={{ scale: 0.92 }}
       transition={{ type: "spring", stiffness: 600, damping: 30 }}
       className={cn(
-        "relative h-5 w-9 rounded-full transition-colors",
+        "relative h-[22px] w-10 rounded-full transition-colors shrink-0",
         checked
-          ? "bg-[color:var(--accent)]"
-          : "bg-[color:var(--border-strong)] hover:bg-[#3a3a42]",
+          ? "bg-[linear-gradient(100deg,var(--accent),var(--accent-2))]"
+          : "bg-[color:var(--border-strong)] hover:bg-[#3f4552]",
       )}
     >
       <motion.span
         layout
         transition={{ type: "spring", stiffness: 600, damping: 40 }}
         className={cn(
-          "absolute top-0.5 inline-block h-4 w-4 rounded-full bg-white shadow",
-          checked ? "left-[18px]" : "left-0.5",
+          "absolute top-[3px] inline-block h-4 w-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.5)]",
+          checked ? "left-[21px]" : "left-[3px]",
         )}
       />
     </motion.button>
@@ -193,7 +250,7 @@ export function Select({
       <select
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none w-full bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-md pl-3 pr-8 py-1.5 text-sm focus:border-[color:var(--accent)] transition"
+        className={cn(inputBase, "appearance-none pl-3 pr-9 py-2 cursor-pointer")}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-[color:var(--bg-elev)]">
@@ -202,7 +259,7 @@ export function Select({
         ))}
       </select>
       <ChevronDown
-        size={14}
+        size={15}
         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[color:var(--fg-muted)] pointer-events-none"
       />
     </div>
@@ -217,16 +274,16 @@ export function Badge({
   tone?: "default" | "accent" | "warning" | "success" | "danger";
 }) {
   const colors = {
-    default: "text-[color:var(--fg-muted)] border-[color:var(--border)]",
+    default: "text-[color:var(--fg-muted)] border-[color:var(--border-strong)] bg-[color:var(--bg-elev-2)]",
     accent: "text-[color:var(--accent)] border-[color:var(--accent)]/40 bg-[color:var(--accent-soft)]",
-    warning: "text-[color:var(--warning)] border-[color:var(--warning)]/40",
-    success: "text-[color:var(--success)] border-[color:var(--success)]/40",
-    danger: "text-[color:var(--danger)] border-[color:var(--danger)]/40",
+    warning: "text-[color:var(--warning)] border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10",
+    success: "text-[color:var(--success)] border-[color:var(--success)]/40 bg-[color:var(--success)]/10",
+    danger: "text-[color:var(--danger)] border-[color:var(--danger)]/40 bg-[color:var(--danger)]/10",
   };
   return (
     <span
       className={cn(
-        "inline-flex items-center text-[10.5px] font-medium tracking-wide uppercase px-1.5 py-0.5 rounded-md border",
+        "inline-flex items-center text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-md border",
         colors[tone],
       )}
     >
@@ -251,8 +308,9 @@ export function IconButton({
   const v = {
     ghost:
       "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)] hover:bg-[color:var(--bg-elev-2)]",
-    danger: "text-[color:var(--danger)] hover:bg-[color:var(--danger)]/10",
-    primary: "bg-[color:var(--accent)] text-black hover:bg-[color:var(--accent-2)]",
+    danger: "text-[color:var(--danger)] hover:bg-[color:var(--danger)]/12",
+    primary:
+      "text-[#04120c] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] hover:brightness-110",
   }[variant];
   return (
     <motion.button
@@ -263,7 +321,7 @@ export function IconButton({
       whileHover={disabled ? undefined : { scale: 1.08 }}
       transition={{ type: "spring", stiffness: 600, damping: 28 }}
       className={cn(
-        "inline-flex items-center justify-center h-7 w-7 rounded-md transition disabled:opacity-40 disabled:cursor-not-allowed",
+        "inline-flex items-center justify-center h-8 w-8 rounded-[var(--radius-sm)] transition disabled:opacity-40 disabled:cursor-not-allowed",
         v,
       )}
     >

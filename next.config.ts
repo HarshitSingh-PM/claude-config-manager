@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
   // .next/standalone/server.js with a minimal node_modules subset.
   output: "standalone",
 
+  // node-pty is a native module (used by the terminal API routes). Next already
+  // auto-externalizes it, but we list it explicitly so the intent is obvious and
+  // it's never accidentally pulled into the server bundle.
+  serverExternalPackages: ["node-pty"],
+
   // The /api/projects route scans the real filesystem at runtime (os.homedir(),
   // readdir over project dirs). Next's file tracer can't reason about those
   // dynamic reads and conservatively traces the *entire* project into the
@@ -38,6 +43,17 @@ const nextConfig: NextConfig = {
     "/api/transfer/export": HEAVY_EXCLUDES,
     "/api/transfer/import": HEAVY_EXCLUDES,
     "/api/orchestrator/live-sessions": HEAVY_EXCLUDES,
+    // Terminal + workspace file tree read the real filesystem at runtime.
+    "/api/terminal": HEAVY_EXCLUDES,
+    "/api/terminal/[id]": HEAVY_EXCLUDES,
+    "/api/terminal/history": HEAVY_EXCLUDES,
+    "/api/fs-tree": HEAVY_EXCLUDES,
+    "/api/file-raw": HEAVY_EXCLUDES,
+    "/api/usage": HEAVY_EXCLUDES,
+    // Pre-existing fs-touching routes that were missing from the list.
+    "/api/file": HEAVY_EXCLUDES,
+    "/api/paths": HEAVY_EXCLUDES,
+    "/api/inventory": HEAVY_EXCLUDES,
   },
 };
 

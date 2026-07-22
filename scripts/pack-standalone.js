@@ -39,6 +39,41 @@ copyDir(staticSrc, staticDst);
 if (fs.existsSync(publicDst)) fs.rmSync(publicDst, { recursive: true, force: true });
 copyDir(publicSrc, publicDst);
 
+// ─── node-pty: the terminal backend ──────────────────────────────────────
+// node-pty is a native module, externalized in next.config.ts. Next's tracer
+// usually copies it into the standalone node_modules, but (a) we can't rely on
+// that for a native package, and (b) on macOS its `spawn-helper` prebuild loses
+// its executable bit during npm's tarball extraction, which makes pty.spawn()
+// fail with "posix_spawnp failed". Copy it in explicitly and restore exec bits.
+function ensureNodePty() {
+  const src = path.join(root, "node_modules", "node-pty");
+  const dst = path.join(standalone, "node_modules", "node-pty");
+  if (!fs.existsSync(src)) {
+    console.warn("⚠ node-pty not found in node_modules — terminal will be disabled.");
+    return;
+  }
+  // Always copy the full tree (merge). Next's tracer typically copies only
+  // node-pty/lib + package.json, leaving out prebuilds/ (the native .node
+  // binaries and spawn-helper) — so a guard on `dst` existence would skip the
+  // one part that actually matters. copyDir merges over the partial copy.
+  copyDir(src, dst);
+  // Restore exec bit on every prebuilt spawn-helper (darwin) and .node binary.
+  const prebuilds = path.join(dst, "prebuilds");
+  if (fs.existsSync(prebuilds)) {
+    for (const platDir of fs.readdirSync(prebuilds)) {
+      const helper = path.join(prebuilds, platDir, "spawn-helper");
+      if (fs.existsSync(helper)) {
+        try {
+          fs.chmodSync(helper, 0o755);
+        } catch {
+          /* best effort */
+        }
+      }
+    }
+  }
+}
+ensureNodePty();
+
 // Scrub dev-only files that Next.js's output-file tracing dragged in.
 // These belong to the source repo (CLAUDE.md is dev memory), not the npm package.
 for (const stray of ["CLAUDE.md", "AGENTS.md", ".claude", ".env", ".env.local"]) {

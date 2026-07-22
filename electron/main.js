@@ -190,6 +190,9 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      // Bridges webUtils.getPathForFile() so the renderer can resolve the
+      // absolute path of files dragged in from Finder/Explorer.
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 

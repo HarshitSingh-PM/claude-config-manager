@@ -167,17 +167,27 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
   }, [data, proj]);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 py-7 space-y-6">
-      {/* Greeting */}
+    <div className="max-w-[1440px] mx-auto px-6 py-9 space-y-7">
+      {/* Hero */}
       <Reveal>
-        <h2 className="text-lg font-semibold tracking-tight">Welcome to Claude Config Manager</h2>
-        <p className="text-xs text-[color:var(--fg-muted)] mt-1">
-          Your control center for Claude Code on this machine — config health, projects, sessions,
-          and what&apos;s worth doing next. Jump into a section below.
-        </p>
+        <div className="flex items-end justify-between gap-6 flex-wrap">
+          <div>
+            <div className="t-eyebrow text-[color:var(--accent)] mb-2.5 inline-flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--accent)] shadow-[0_0_10px_var(--accent-glow)]" />
+              Control Center
+            </div>
+            <h2 className="t-display text-gradient max-w-2xl">
+              Everything about Claude Code, in one place.
+            </h2>
+            <p className="t-body text-[color:var(--fg-muted)] mt-3 max-w-xl">
+              Config health, projects, sessions, and what&apos;s worth doing next — all on this
+              machine. Jump into a section below.
+            </p>
+          </div>
+        </div>
       </Reveal>
 
-      {/* KPI cards */}
+      {/* KPI stat tiles */}
       <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" stagger={0.07}>
         <KpiCard
           icon={<FolderGit2 size={15} />}
@@ -238,12 +248,14 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
         />
       </Stagger>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5">
         {/* Recommended actions */}
-        <Card className="p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles size={15} className="text-[color:var(--accent)]" />
-            <h3 className="text-sm font-semibold">Recommended next steps</h3>
+        <Card variant="elevated" className="p-6">
+          <div className="flex items-center gap-2.5 mb-5">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-[color:var(--accent-soft)] text-[color:var(--accent)]">
+              <Sparkles size={16} />
+            </span>
+            <h3 className="t-h2">Recommended next steps</h3>
           </div>
           {data === null ? (
             <div className="text-xs text-[color:var(--fg-muted)] py-6 text-center">Checking your setup…</div>
@@ -273,23 +285,25 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
                   whileHover={{ x: 3 }}
                   whileTap={{ scale: 0.99 }}
                   transition={SPRING}
-                  className="w-full text-left flex items-start gap-3 px-3 py-2.5 rounded-lg border border-[color:var(--border)] hover:border-[color:var(--accent)]/40 hover:bg-[color:var(--bg-elev-2)] transition-colors group"
+                  className="w-full text-left flex items-start gap-3.5 px-4 py-3.5 rounded-[var(--radius-sm)] border border-[color:var(--border)] bg-[color:var(--bg-elev-2)]/40 hover:border-[color:var(--accent)]/45 hover:bg-[color:var(--bg-elev-2)] transition-colors group"
                 >
                   <span
-                    className={`shrink-0 mt-0.5 ${
-                      act.tone === "warn" ? "text-[color:var(--warning)]" : "text-[color:var(--accent)]"
+                    className={`shrink-0 mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-lg ${
+                      act.tone === "warn"
+                        ? "text-[color:var(--warning)] bg-[color:var(--warning)]/12"
+                        : "text-[color:var(--accent)] bg-[color:var(--accent-soft)]"
                     }`}
                   >
                     {act.icon}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-medium text-[color:var(--fg)]">{act.title}</span>
-                    <span className="block text-[11px] text-[color:var(--fg-muted)] leading-relaxed mt-0.5">
+                    <span className="block t-small font-semibold text-[color:var(--fg)]">{act.title}</span>
+                    <span className="block t-label text-[color:var(--fg-muted)] leading-relaxed mt-1">
                       {act.detail}
                     </span>
                   </span>
-                  <span className="shrink-0 inline-flex items-center gap-1 text-[10.5px] text-[color:var(--fg-faint)] group-hover:text-[color:var(--accent)] transition mt-0.5">
-                    {act.cta} <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                  <span className="shrink-0 inline-flex items-center gap-1 t-label font-medium text-[color:var(--fg-faint)] group-hover:text-[color:var(--accent)] transition mt-0.5">
+                    {act.cta} <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                   </span>
                 </motion.button>
               ))}
@@ -298,10 +312,10 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
         </Card>
 
         {/* At a glance + jump-to */}
-        <div className="space-y-4">
-          <Card className="p-5">
-            <h3 className="text-sm font-semibold mb-3">At a glance</h3>
-            <Stagger className="space-y-2.5" stagger={0.04}>
+        <div className="space-y-5">
+          <Card variant="elevated" className="p-6">
+            <h3 className="t-h2 mb-4">At a glance</h3>
+            <Stagger className="space-y-3" stagger={0.04}>
               <GlanceRow icon={<Cpu size={13} />} label="Model" value={data?.config.model ?? "default"} />
               <GlanceRow
                 icon={<ShieldCheck size={13} />}
@@ -377,36 +391,40 @@ function KpiCard({
     <motion.button
       variants={fadeUp}
       onClick={onClick}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -5 }}
       whileTap={{ scale: 0.98 }}
       transition={SPRING}
-      className="text-left rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 backdrop-blur-sm p-4 surface-interactive group"
+      className="text-left rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)]/80 backdrop-blur-md p-5 surface-interactive surface-hi group"
     >
       <div className="flex items-center justify-between">
         <motion.span
-          whileHover={{ rotate: -8, scale: 1.06 }}
+          whileHover={{ rotate: -8, scale: 1.08 }}
           transition={SPRING}
-          className={`inline-flex h-7 w-7 items-center justify-center rounded-lg ${chip}`}
+          className={`inline-flex h-9 w-9 items-center justify-center rounded-[10px] ${chip}`}
         >
           {icon}
         </motion.span>
         <ArrowRight
-          size={13}
-          className="text-[color:var(--fg-faint)] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"
+          size={15}
+          className="text-[color:var(--fg-faint)] opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-[color:var(--accent)] transition-all"
         />
       </div>
       {loading ? (
-        <Skeleton className="h-7 w-16 mt-3" />
+        <Skeleton className="h-9 w-20 mt-4" />
       ) : (
-        <div className={`text-2xl font-semibold mt-3 tracking-tight ${count != null ? "text-[color:var(--fg)]" : valueColor}`}>
+        <div
+          className={`text-[2rem] leading-none font-semibold mt-4 tracking-tight ${
+            count != null ? "text-brand-gradient" : valueColor
+          }`}
+        >
           {count != null ? <AnimatedNumber value={count} /> : value}
         </div>
       )}
-      <div className="text-[11px] text-[color:var(--fg)] mt-1">{label}</div>
+      <div className="t-small font-medium text-[color:var(--fg)] mt-2.5">{label}</div>
       {loading ? (
         <Skeleton className="h-3 w-24 mt-1.5" />
       ) : (
-        sub && <div className="text-[10.5px] text-[color:var(--fg-faint)] mt-0.5">{sub}</div>
+        sub && <div className="t-label text-[color:var(--fg-faint)] mt-1">{sub}</div>
       )}
     </motion.button>
   );
@@ -421,13 +439,13 @@ function GlanceRow({
   bad?: boolean;
 }) {
   return (
-    <motion.div variants={fadeUp} className="flex items-center justify-between gap-3 text-xs">
+    <motion.div variants={fadeUp} className="flex items-center justify-between gap-3 t-small">
       <span className="inline-flex items-center gap-2 text-[color:var(--fg-muted)]">
         <span className="text-[color:var(--fg-faint)]">{icon}</span>
         {label}
       </span>
       <span
-        className={`font-mono text-[11px] ${
+        className={`font-mono t-label ${
           bad ? "text-[color:var(--warning)]" : "text-[color:var(--fg)]"
         }`}
       >
@@ -452,20 +470,20 @@ function JumpCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       transition={SPRING}
-      className="text-left rounded-xl border border-[color:var(--border)] bg-[color:var(--bg-elev)]/60 p-3.5 surface-interactive group"
+      className="text-left rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)]/70 p-4 surface-interactive surface-hi group"
     >
       <motion.span
-        whileHover={{ scale: 1.15, rotate: -6 }}
+        whileHover={{ scale: 1.12, rotate: -6 }}
         transition={SPRING}
-        className="text-[color:var(--accent)] inline-flex"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
       >
         {icon}
       </motion.span>
-      <div className="text-xs font-medium mt-2 inline-flex items-center gap-1">
+      <div className="t-small font-semibold mt-2.5 inline-flex items-center gap-1">
         {label}
-        <ArrowRight size={11} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+        <ArrowRight size={12} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-[color:var(--accent)] transition-all" />
       </div>
-      <div className="text-[10.5px] text-[color:var(--fg-faint)] mt-0.5">{hint}</div>
+      <div className="t-label text-[color:var(--fg-faint)] mt-1">{hint}</div>
     </motion.button>
   );
 }
