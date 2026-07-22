@@ -649,7 +649,7 @@ function LaunchPanel({
             onClick={() => setKind(k)}
             className={cn(
               "h-7 rounded-md text-xs font-medium inline-flex items-center justify-center gap-1.5 transition",
-              kind === k ? "bg-[color:var(--accent)] text-black" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]",
+              kind === k ? "bg-[color:var(--accent)] text-[color:var(--accent-ink)]" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]",
             )}
           >
             {k === "single" ? <Bot size={12} /> : <Users size={12} />}
@@ -720,7 +720,7 @@ function LaunchPanel({
                     onClick={() => setTeamMode(m)}
                     className={cn(
                       "rounded text-[10.5px] font-medium transition",
-                      teamMode === m ? "bg-[color:var(--accent)] text-black" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]",
+                      teamMode === m ? "bg-[color:var(--accent)] text-[color:var(--accent-ink)]" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]",
                     )}
                   >
                     {m === "orchestrated" ? "Lead" : "Parallel"}
@@ -837,7 +837,7 @@ function LaunchPanel({
           disabled={!task.trim() || busy || !meta.claudeAvailable}
           className={cn(
             "w-full inline-flex items-center justify-center gap-2 h-9 rounded-md text-sm font-medium transition",
-            "bg-[color:var(--accent)] text-black hover:bg-[color:var(--accent-2)]",
+            "bg-[color:var(--accent)] text-[color:var(--accent-ink)] hover:bg-[color:var(--accent-2)]",
             "disabled:opacity-40 disabled:cursor-not-allowed",
           )}
         >
@@ -850,7 +850,7 @@ function LaunchPanel({
           disabled={!objective.trim() || busy || !meta.claudeAvailable || roles.filter((r) => r.responsibility.trim()).length === 0}
           className={cn(
             "w-full inline-flex items-center justify-center gap-2 h-9 rounded-md text-sm font-medium transition",
-            "bg-[color:var(--accent)] text-black hover:bg-[color:var(--accent-2)]",
+            "bg-[color:var(--accent)] text-[color:var(--accent-ink)] hover:bg-[color:var(--accent-2)]",
             "disabled:opacity-40 disabled:cursor-not-allowed",
           )}
         >
@@ -932,7 +932,7 @@ function ContinueControl({
         <button
           onClick={submit}
           disabled={!task.trim() || busy}
-          className="inline-flex items-center gap-1.5 text-[11px] px-2.5 h-7 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 text-[11px] px-2.5 h-7 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
         >
           {busy ? <Loader2 size={11} className="animate-spin" /> : <RotateCw size={11} />} Resume
         </button>
@@ -1432,7 +1432,7 @@ function NewCampaignForm({
           <button
             onClick={submit}
             disabled={!name.trim() || !objective.trim() || busy}
-            className="inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
           >
             {busy ? <Loader2 size={12} className="animate-spin" /> : <Plus size={13} />} Create campaign
           </button>
@@ -1524,7 +1524,7 @@ function CampaignCard({
           <button
             onClick={runNext}
             disabled={busy || !!activeRun || c.status === "done"}
-            className="inline-flex items-center gap-1.5 text-[11px] px-3 h-8 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40 shrink-0"
+            className="inline-flex items-center gap-1.5 text-[11px] px-3 h-8 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40 shrink-0"
           >
             {busy ? <Loader2 size={11} className="animate-spin" /> : <Play size={11} />} Run next session
           </button>
@@ -1633,7 +1633,7 @@ function CampaignsView({
         </div>
         <button
           onClick={() => setCreating((v) => !v)}
-          className="shrink-0 inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition"
+          className="shrink-0 inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition"
         >
           <Plus size={13} /> New campaign
         </button>

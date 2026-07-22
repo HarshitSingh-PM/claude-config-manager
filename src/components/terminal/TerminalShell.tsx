@@ -310,6 +310,7 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
   // are right there. setNewCwd is a no-op when the value is unchanged.
   const focusedCwd = focusedSessionId ? sessionById.get(focusedSessionId)?.cwd ?? null : null;
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (focusedCwd) setNewCwd(focusedCwd);
   }, [focusedCwd]);
 
@@ -372,7 +373,7 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
           </button>
           <button
             onClick={() => createSession("claude")}
-            className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] px-3 text-[13px] font-semibold text-[#04120c] transition hover:brightness-110 shadow-[0_4px_16px_var(--accent-glow)]"
+            className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] px-3 text-[13px] font-semibold text-[color:var(--accent-ink)] transition hover:brightness-110 shadow-[0_4px_16px_var(--accent-glow)]"
           >
             <Sparkles size={14} /> Claude
           </button>

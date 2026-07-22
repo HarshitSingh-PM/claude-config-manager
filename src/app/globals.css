@@ -14,22 +14,28 @@
   --fg-muted: #9c9ca4;  /* ~7:1  */
   --fg-faint: #808089;  /* ~4.7:1 */
 
-  /* ─── Accent: single mechanical "signal" lime, used sparingly ─ */
-  --accent: #c9f24e;
-  --accent-2: #a9d63c;       /* deeper lime — tight metallic sheen, not a rainbow */
-  --accent-strong: #b6e02f;
-  --accent-soft: rgba(201, 242, 78, 0.12);
-  --accent-glow: rgba(201, 242, 78, 0.20);
-  --accent-ink: #10160a;     /* text on accent fills */
+  /* ─── Bauhaus: monochrome canvas, only primary colors (R/Y/B) ──
+       blue = interactive/active/primary · red = live/destructive ·
+       yellow = warning/highlight. Nothing else carries hue. ─────── */
+  --blue: #4a7bff;
+  --red: #f5333a;
+  --yellow: #ffd21e;
 
-  /* ─── Primary action = white (Uber signature) ─────────────── */
-  --primary: #f6f6f7;
-  --primary-ink: #060607;
+  /* Interactive/primary == blue */
+  --accent: var(--blue);
+  --accent-2: #3a63e6;
+  --accent-strong: #6a92ff;
+  --accent-soft: rgba(74, 123, 255, 0.15);
+  --accent-glow: rgba(74, 123, 255, 0.22);
+  --accent-ink: #ffffff;     /* text on blue fills */
 
-  /* ─── Semantic ────────────────────────────────────────────── */
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #fb5b5b;
+  --primary: var(--blue);
+  --primary-ink: #ffffff;
+
+  /* ─── Semantic → primary colors ───────────────────────────── */
+  --success: var(--blue);    /* affirmative = blue (no green in the system) */
+  --warning: var(--yellow);
+  --danger: var(--red);
 
   /* ─── Tight, mechanical radii ─────────────────────────────── */
   --radius-sm: 4px;
@@ -98,7 +104,7 @@ body::after {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(70% 40% at 50% -8%, rgba(201, 242, 78, 0.05), transparent 70%),
+    radial-gradient(70% 40% at 50% -8%, rgba(255, 255, 255, 0.035), transparent 70%),
     radial-gradient(120% 100% at 50% 120%, rgba(0, 0, 0, 0.5), transparent 60%);
   pointer-events: none;
 }

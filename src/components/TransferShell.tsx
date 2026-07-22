@@ -73,7 +73,7 @@ function PrimaryButton({
     <button
       onClick={onClick}
       disabled={disabled || busy}
-      className="inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
+      className="inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
     >
       {busy ? <Loader2 size={13} className="animate-spin" /> : null}
       {children}
@@ -280,7 +280,7 @@ export default function TransferShell() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-9 space-y-6">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#04120c] shadow-[0_4px_16px_var(--accent-glow)]">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[color:var(--accent-ink)] shadow-[0_4px_16px_var(--accent-glow)]">
           <ArrowLeftRight size={20} />
         </span>
         <div>

@@ -109,7 +109,7 @@ export function MacPermissionsGate() {
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 onClick={dismiss}
-                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] px-4 py-2 text-[13px] font-semibold text-[#04120c] transition hover:brightness-110"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] px-4 py-2 text-[13px] font-semibold text-[color:var(--accent-ink)] transition hover:brightness-110"
               >
                 <Check size={14} /> Got it
               </button>

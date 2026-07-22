@@ -29,7 +29,7 @@ export function BuildShell() {
       {/* ─── Intro banner ─────────────────────────────────── */}
       <Reveal className="mb-6">
       <Card variant="gradient" className="p-5 flex items-start gap-3.5">
-        <div className="h-11 w-11 shrink-0 rounded-[var(--radius)] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#04120c] flex items-center justify-center shadow-[0_4px_16px_var(--accent-glow)]">
+        <div className="h-11 w-11 shrink-0 rounded-[var(--radius)] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[color:var(--accent-ink)] flex items-center justify-center shadow-[0_4px_16px_var(--accent-glow)]">
           <Hammer size={20} />
         </div>
         <div>

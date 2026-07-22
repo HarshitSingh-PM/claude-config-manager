@@ -492,7 +492,7 @@ function ContextSettings({
               <button
                 onClick={saveVault}
                 disabled={saving}
-                className="text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
+                className="text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
               >
                 {saving ? "Saving…" : "Save"}
               </button>
@@ -776,7 +776,7 @@ function FileEditor({ file, onChanged }: { file: ProjectFile; onChanged: () => v
           <button
             onClick={save}
             disabled={!dirty || saving}
-            className="inline-flex items-center gap-1.5 text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-30 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Save size={11} /> {saving ? "Saving…" : "Save"}
           </button>

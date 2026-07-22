@@ -119,7 +119,7 @@ export function LibraryShell({
       {/* ─── Intro banner ─────────────────────────────────── */}
       <Reveal>
       <Card className="p-4 flex items-start gap-3 bg-gradient-to-br from-[color:var(--accent-soft)]/30 to-transparent border-[color:var(--accent)]/30">
-        <div className="h-9 w-9 shrink-0 rounded-lg bg-[color:var(--accent)] text-black flex items-center justify-center">
+        <div className="h-9 w-9 shrink-0 rounded-lg bg-[color:var(--accent)] text-[color:var(--accent-ink)] flex items-center justify-center">
           <Sparkles size={16} />
         </div>
         <div className="flex-1 min-w-0">

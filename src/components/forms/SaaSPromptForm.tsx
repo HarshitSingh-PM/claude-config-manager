@@ -371,7 +371,7 @@ export function SaaSPromptForm() {
           <div className="flex items-center gap-2 mb-3">
             <button
               onClick={copy}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition"
             >
               {justCopied ? (
                 <>

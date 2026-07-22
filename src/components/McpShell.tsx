@@ -137,7 +137,7 @@ export function McpShell({ projectDir }: { projectDir: string }) {
           onClick={() => setAdding((v) => !v)}
           whileTap={{ scale: 0.95 }}
           transition={SPRING}
-          className="inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition shrink-0"
+          className="inline-flex items-center gap-1.5 text-xs px-3 h-8 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition shrink-0"
         >
           <motion.span animate={{ rotate: adding ? 45 : 0 }} transition={SPRING} className="inline-flex">
             <Plus size={13} />
@@ -580,7 +580,7 @@ function AddEditPanel({
         <button
           onClick={save}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
         >
           {saving ? "Saving…" : mode === "add" ? "Add server" : "Save changes"}
         </button>

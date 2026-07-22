@@ -261,7 +261,7 @@ export function SkillsDirEditor({
                   />
                   <button
                     onClick={renameSkill}
-                    className="text-xs px-2.5 h-7 rounded bg-[color:var(--accent)] text-black"
+                    className="text-xs px-2.5 h-7 rounded bg-[color:var(--accent)] text-[color:var(--accent-ink)]"
                   >
                     Rename
                   </button>
@@ -295,7 +295,7 @@ export function SkillsDirEditor({
                 <button
                   onClick={saveActive}
                   disabled={!dirty || saving}
-                  className="text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
+                  className="text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-40"
                 >
                   {saving ? "Saving…" : "Save"}
                 </button>

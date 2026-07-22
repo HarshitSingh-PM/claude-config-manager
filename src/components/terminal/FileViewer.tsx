@@ -185,7 +185,7 @@ export function FileViewer({
               <button
                 onClick={save}
                 disabled={!dirty || saving}
-                className="inline-flex items-center gap-1 rounded-md bg-[color:var(--accent)] px-2.5 py-1 text-[11px] font-medium text-black transition hover:bg-[color:var(--accent-2)] disabled:opacity-30"
+                className="inline-flex items-center gap-1 rounded-md bg-[color:var(--accent)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--accent-ink)] transition hover:bg-[color:var(--accent-2)] disabled:opacity-30"
               >
                 {saving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
                 Save

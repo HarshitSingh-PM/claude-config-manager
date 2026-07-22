@@ -314,7 +314,7 @@ export function StatusLineForm({ scriptPath, settingsPath, onSaved, onError }: P
           <button
             onClick={save}
             disabled={!dirty || saving || config.widgets.length === 0}
-            className="inline-flex items-center gap-1.5 text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-black font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-30 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 text-xs px-3 h-7 rounded-md bg-[color:var(--accent)] text-[color:var(--accent-ink)] font-medium hover:bg-[color:var(--accent-2)] transition disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Save size={11} /> {saving ? "Saving…" : "Save & install"}
           </button>
