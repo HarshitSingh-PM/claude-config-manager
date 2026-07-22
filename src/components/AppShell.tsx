@@ -521,11 +521,11 @@ export function AppShell() {
             }}
           />
         ) : (
-        <div className="max-w-[1280px] mx-auto px-6 py-6 space-y-5">
+        <div className="max-w-[1440px] mx-auto px-6 py-8 space-y-5">
           {/* ─── Project picker ────────────────────────────── */}
           <Card className="p-4 flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-medium text-[color:var(--fg)]">Project directory</span>
+              <span className="t-small font-medium text-[color:var(--fg)]">Project directory</span>
               <InfoIcon
                 content="The directory used for project-scoped tabs (Global Project, Local Claude). Auto-detected to your current working directory."
                 significance="Switch to point at any local repo. Only project tabs need this; user/enterprise scopes ignore it."
@@ -556,7 +556,7 @@ export function AppShell() {
                 >
                   <button
                     onClick={() => setActiveTab(t.id)}
-                    className={`relative px-4 py-2.5 text-sm transition flex items-center gap-2 ${
+                    className={`relative px-4 py-3 t-body font-medium transition flex items-center gap-2 ${
                       active
                         ? "text-[color:var(--fg)]"
                         : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]"
@@ -598,7 +598,7 @@ export function AppShell() {
           <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-5">
             {/* Sidebar */}
             <Card className="p-2.5 h-fit">
-              <div className="text-[10px] font-medium tracking-wide uppercase text-[color:var(--fg-faint)] px-2 py-1.5">
+              <div className="t-eyebrow text-[color:var(--fg-faint)] px-2 py-1.5">
                 Files
               </div>
               <div className="space-y-0.5">

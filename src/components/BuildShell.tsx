@@ -25,16 +25,16 @@ export function BuildShell() {
   const active = buildTools.find((t) => t.id === activeId) ?? buildTools[0];
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 py-6">
+    <div className="max-w-[1440px] mx-auto px-6 py-9">
       {/* ─── Intro banner ─────────────────────────────────── */}
-      <Reveal className="mb-5">
-      <Card className="p-4 flex items-start gap-3 bg-gradient-to-br from-[color:var(--accent-soft)]/40 to-transparent border-[color:var(--accent)]/30">
-        <div className="h-9 w-9 shrink-0 rounded-lg bg-[color:var(--accent)] text-black flex items-center justify-center">
-          <Hammer size={16} />
+      <Reveal className="mb-6">
+      <Card variant="gradient" className="p-5 flex items-start gap-3.5">
+        <div className="h-11 w-11 shrink-0 rounded-[var(--radius)] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#04120c] flex items-center justify-center shadow-[0_4px_16px_var(--accent-glow)]">
+          <Hammer size={20} />
         </div>
         <div>
-          <h3 className="text-sm font-medium">Build mode</h3>
-          <p className="text-[11.5px] text-[color:var(--fg-muted)] mt-0.5 leading-relaxed">
+          <h3 className="t-h2">Build mode</h3>
+          <p className="t-small text-[color:var(--fg-muted)] mt-1 leading-relaxed max-w-2xl">
             Guided prompt builders. Pick the kind of thing you&apos;re building, fill in the form,
             and get a well-structured prompt that you paste into Claude Code. Encodes the
             best practices so you don&apos;t have to remember them.
@@ -46,7 +46,7 @@ export function BuildShell() {
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-5">
         {/* ─── Sidebar: tools ─────────────────────────────── */}
         <Card className="p-2.5 h-fit">
-          <div className="text-[10px] font-medium tracking-wide uppercase text-[color:var(--fg-faint)] px-2 py-1.5">
+          <div className="t-eyebrow text-[color:var(--fg-faint)] px-2 py-1.5">
             Builders
           </div>
           <Stagger className="space-y-0.5" stagger={0.04}>
@@ -79,10 +79,10 @@ export function BuildShell() {
                   )}
                   <span className="relative shrink-0 mt-0.5">{iconFor(t.iconKey)}</span>
                   <span className="relative flex-1 min-w-0">
-                    <span className="text-xs font-medium block truncate">{t.label}</span>
+                    <span className="t-small font-medium block truncate">{t.label}</span>
                     {disabled && (
-                      <span className="text-[10px] inline-flex items-center gap-1 mt-0.5 text-[color:var(--fg-faint)]">
-                        <Lock size={9} /> coming soon
+                      <span className="t-label inline-flex items-center gap-1 mt-0.5 text-[color:var(--fg-faint)]">
+                        <Lock size={10} /> coming soon
                       </span>
                     )}
                   </span>

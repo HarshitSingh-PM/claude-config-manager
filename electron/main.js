@@ -184,7 +184,7 @@ function createWindow() {
     // other app. (The previous "hiddenInset" hid the bar but the web content
     // defined no -webkit-app-region drag strip, so the window couldn't be moved.)
     titleBarStyle: "default",
-    backgroundColor: "#0a0a0c",
+    backgroundColor: "#070809",
     title: "Claude Config",
     show: false,
     webPreferences: {

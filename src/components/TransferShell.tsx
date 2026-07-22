@@ -278,21 +278,23 @@ export default function TransferShell() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
-      <div className="flex items-center gap-2.5">
-        <ArrowLeftRight size={18} className="text-[color:var(--accent)]" />
+    <div className="max-w-4xl mx-auto px-6 py-9 space-y-6">
+      <div className="flex items-center gap-3">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius)] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#04120c] shadow-[0_4px_16px_var(--accent-glow)]">
+          <ArrowLeftRight size={20} />
+        </span>
         <div>
-          <h2 className="text-base font-semibold">Transfer</h2>
-          <p className="text-xs text-[color:var(--fg-muted)]">
+          <h2 className="t-h1">Transfer</h2>
+          <p className="t-small text-[color:var(--fg-muted)] mt-0.5">
             Move your whole Claude setup to another machine in one encrypted file.
           </p>
         </div>
       </div>
 
-      <Card className="p-4">
+      <Card variant="elevated" className="p-5">
         <div className="flex items-start gap-3">
           <ShieldCheck size={16} className="text-[color:var(--success)] mt-0.5 shrink-0" />
-          <div className="text-xs text-[color:var(--fg-muted)] leading-relaxed space-y-1.5">
+          <div className="t-small text-[color:var(--fg-muted)] leading-relaxed space-y-1.5">
             <p>
               <span className="text-[color:var(--fg)]">How it works:</span> export creates a single{" "}
               <span className="font-mono">.ccsync</span> file sealed with AES-256-GCM (key derived from your
