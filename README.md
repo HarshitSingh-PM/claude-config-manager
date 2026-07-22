@@ -5,23 +5,78 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/node/v/claude-config-ui.svg)](#requirements)
 
-A local, open-source UI for editing every Claude Code config file from one place — `settings.json`, `CLAUDE.md`, `.mcp.json`, subagents, slash commands, output styles, keybindings — plus a built-in **credentials manager** so you set GitHub / AWS / Vercel / Stripe / etc. once and they're available across every project.
+### The mission control for Claude Code.
+
+Run a **terminal grid of live Claude agents**, edit **every config file** from one place, watch your **usage limits** tick down, move your whole setup between machines **encrypted** — all in one fast, local, open-source desktop app. Nothing leaves your machine.
 
 <p align="center">
-  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for macOS — Apple Silicon" src="https://img.shields.io/badge/download-macOS%20Apple%20Silicon%20%E2%86%93-7c3aed?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for macOS — Apple Silicon" src="https://img.shields.io/badge/download-macOS%20Apple%20Silicon%20%E2%86%93-4a7bff?style=for-the-badge&logo=apple&logoColor=white"></a>
   &nbsp;
-  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for macOS — Intel" src="https://img.shields.io/badge/download-macOS%20Intel%20%E2%86%93-6d28d9?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for macOS — Intel" src="https://img.shields.io/badge/download-macOS%20Intel%20%E2%86%93-2f6bff?style=for-the-badge&logo=apple&logoColor=white"></a>
   &nbsp;
-  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for Windows" src="https://img.shields.io/badge/download-Windows%20%E2%86%93-5b21b6?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest"><img alt="Download for Windows" src="https://img.shields.io/badge/download-Windows%20%E2%86%93-1e3a8a?style=for-the-badge&logo=windows&logoColor=white"></a>
 </p>
 
 <p align="center">
   <em>or, in any terminal:</em>&nbsp;&nbsp;<code>npx claude-config-ui</code>
 </p>
 
-<img width="800" height="387" alt="Image" src="https://github.com/user-attachments/assets/a88af615-a4d2-450e-bc11-6accd6644bf5" />
+<p align="center">
+  <a href="docs/media/demo.mp4"><img src="docs/media/home.png" width="860" alt="Claude Config Manager — 40-second tour"></a>
+  <br>
+  <strong><a href="docs/media/demo.mp4">▶ Watch the 40-second tour</a></strong>
+</p>
 
-> Files saved by this tool land in Claude Code's standard locations. Claude Code picks them up automatically on the next session start. No daemons, no symlinks, no special integration step.
+> Files saved by this tool land in Claude Code's standard locations — Claude Code picks them up automatically on the next session start. **No daemons, no symlinks, no special integration step.**
+
+---
+
+## ⌘ The Claude Code workspace
+
+The headline feature: a **full terminal environment for Claude Code, inside the app.** Stop juggling terminal tabs — run your agents in a grid and watch them all at once.
+
+<p align="center">
+  <img src="docs/media/terminal.png" width="860" alt="The Claude Code terminal workspace — 4-pane split, file tree, and control bar">
+</p>
+
+- **Real terminals, embedded** — spin up as many shells (or one-click **Claude** sessions that launch the `claude` CLI) as you want. Actual PTYs, full color, resize, scrollback.
+- **Split 1 / 2 / 3 / 4 ways** — a layout switcher tiles panes so you can run four agents side-by-side and multitask like a cockpit.
+- **A file tree that follows your work** — a Nimbalyst-style workspace tree on the left. Click a pane (or `cd` into a project) and the tree **jumps to that folder automatically** so its files are right there. "Open terminal here" on any folder.
+- **A control bar for Claude** — a bottom strip that drives the focused session the way you would: pick the **model** and **effort**, cycle **permission mode** (⇧⇥), toggle **extended thinking** (⌥T), and fire `/context`, `/compact`, `/clear`, `/help` — no typing.
+- **Drag & drop files** → their absolute paths paste straight into the focused terminal (a dropped folder also becomes the workspace root).
+- **Transcripts that survive restarts** — every session is saved to disk. A **History** browser lets you re-open any past session's transcript (colors preserved) or reopen its folder in a fresh terminal. Quit the app mid-run? Your record is still there.
+- **A built-in file viewer** — click any file in the tree to open it inline:
+  - **Markdown** — rendered preview ⇄ editor, save with ⌘S
+  - **HTML** — live sandboxed preview ⇄ source
+  - **PDF** — native viewer
+  - **Images & code** — inline
+
+---
+
+## 📊 Live usage meter
+
+A gauge next to the header shows exactly how much you have left — pulled from Claude's own local usage cache, so it matches the app precisely:
+
+- **5-hour window**, **weekly**, and **per-model weekly** (Fable 5 / Opus) remaining
+- Live **"resets in…" countdowns** for each
+- Color-coded: comfortable → low → critical
+
+No more guessing when you'll hit a limit mid-flow.
+
+---
+
+## Everything else it does
+
+|  | |
+| --- | --- |
+| ⚙️ **Config, all of it** | Edit `settings.json`, `CLAUDE.md`, `.mcp.json`, subagents, slash commands, output styles, keybindings — across all four scopes, every field with a tooltip that says *what* it does and *why* it matters. |
+| 🔑 **Credentials once** | Set GitHub / AWS / Vercel / Stripe / 28+ services one time at user scope; they're available to every project. Masked inputs, deep links to each token page. |
+| 🧭 **Agent Orchestrator** | A live board to launch one agent or a whole team, watch the tool/sub-agent tree render in real time, and resume any run. Discovers agents already running on your machine. |
+| 📦 **Encrypted Transfer** | Pack your entire Claude world into one AES-256-GCM `.ccsync` file and restore it on another laptop with a per-file preview. |
+| 🗂️ **Projects & sessions** | A bird's-eye view of every project that uses Claude, plus a per-project decision log (`logic.md`) and key tracker (`credentials.md`). |
+| 🏠 **Home dashboard** | Opens on a control center: KPI tiles + **Recommended next steps** derived from your actual setup (lock down credentials, enable the sandbox, review a risky `bypassPermissions` default…). |
+
+---
 
 ## Install
 
@@ -29,29 +84,24 @@ A local, open-source UI for editing every Claude Code config file from one place
 
 Download from the [latest release](https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest):
 
-- **`Claude Config-X.Y.Z-arm64.dmg`** — Apple Silicon (M1 / M2 / M3 / M4 Macs, 2020+)
+- **`Claude Config-X.Y.Z-arm64.dmg`** — Apple Silicon (M1 / M2 / M3 / M4, 2020+)
 - **`Claude Config-X.Y.Z-x64.dmg`** — Intel Macs (2019 and earlier)
 
 Open the `.dmg`, drag **Claude Config** to **Applications**, launch from Spotlight or Launchpad.
 
-> **First launch (one time):** the app is signed ad-hoc but not notarized (no paid Apple Developer certificate), so macOS Gatekeeper blocks it the first time. **Right-click the app → Open**, then click **Open** in the dialog — after that it launches normally. Or clear the quarantine flag once:
+> **First launch (one time):** the app is signed ad-hoc but not notarized (no paid Apple Developer certificate), so macOS Gatekeeper blocks it once. **Right-click the app → Open**, then **Open** in the dialog. Or clear the quarantine flag:
 >
 > ```bash
 > xattr -dr com.apple.quarantine "/Applications/Claude Config.app"
 > ```
 >
-> **If macOS says the app is "damaged and can't be opened"** — builds through v0.9.0 shipped with an invalid code-signature seal, so right-click → Open won't help. Repair it once with:
->
-> ```bash
-> xattr -dr com.apple.quarantine "/Applications/Claude Config.app"
-> codesign --force --deep --sign - "/Applications/Claude Config.app"
-> ```
+> The **"app is damaged"** seal bug from builds ≤ v0.9.0 is fixed in current releases.
 
 ### Windows app
 
-Download `Claude-Config-X.Y.Z-x64-setup.exe` from the [latest release](https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest), run the installer, then launch **Claude Config** from the Start menu.
+Download `Claude-Config-X.Y.Z-x64-setup.exe` from the [latest release](https://github.com/HarshitSingh-PM/claude-config-manager/releases/latest), run the installer, launch **Claude Config** from the Start menu.
 
-> **First launch (one time):** Windows SmartScreen will block the unsigned installer. Click **More info** → **Run anyway**. Standard for indie/OSS apps without a code-signing certificate.
+> **First launch (one time):** Windows SmartScreen blocks the unsigned installer. Click **More info** → **Run anyway**. Standard for indie/OSS apps without a code-signing cert.
 
 ### Command-line (any OS)
 
@@ -59,141 +109,93 @@ Download `Claude-Config-X.Y.Z-x64-setup.exe` from the [latest release](https://g
 npx claude-config-ui
 ```
 
-The launcher picks a free port, opens your browser, and detects your OS-correct paths automatically. Press `Ctrl+C` to stop.
+The launcher picks a free port, opens your browser, and detects your OS-correct paths automatically. `Ctrl+C` to stop.
+
+> The embedded-terminal, drag-and-drop, and macOS onboarding features are richest in the **desktop app** (they need OS access the browser sandbox doesn't allow). Everything else runs identically over `npx`.
 
 ---
 
-## Why
+## Why it exists
 
-Claude Code reads config from 30+ possible files across user, project, project-local, and enterprise scopes. People learn the system by trial-and-error or by copy-pasting community gists. This tool turns that into a guided form.
+Claude Code reads config from 30+ possible files across user, project, project-local, and enterprise scopes. Most people learn the system by trial-and-error or by copy-pasting community gists. This turns that into a guided, visual workflow — and then goes further, giving you a place to actually *run and watch* your agents.
 
 - **Auto-detected paths** — `~/.claude/` on macOS/Linux, `%APPDATA%\Claude\` on Windows, project paths from your repo, enterprise paths from `/Library/Application Support/ClaudeCode/` or `/etc/claude-code/`.
-- **Every field has a tooltip** explaining what it does AND why it matters.
-- **Community presets** baked in — Karpathy's 4-rules CLAUDE.md, HumanLayer's skeleton, Trail of Bits credential lockdown, popular hook recipes — drop them in with one click.
-- **Auto-backup** — every save writes a `*.bak-<timestamp>` next to the original. Nothing is lost.
-- **Autosave** — 1.2s debounce, smart backup policy that doesn't pollute your folder with hundreds of `.bak` files.
-- **Path sandbox** — the API refuses to read or write anything outside your home directory, current working directory, or known Claude Code enterprise dirs.
-- **Credentials catalog** — 28 services across cloud / deploy / SCM / databases / collaboration / AI / payments / email / observability. Set once at user scope, export to every project.
+- **Community presets** baked in — Karpathy's 4-rules CLAUDE.md, HumanLayer's skeleton, Trail of Bits credential lockdown, popular hook recipes — one click.
+- **Auto-backup** — every save writes a `*.bak-<timestamp>`. Nothing is lost.
+- **Path sandbox** — the API refuses to read or write anything outside your home directory, cwd, or known Claude Code enterprise dirs.
 
 ---
 
 ## The four scopes
 
-This mirrors how Claude Code actually resolves config:
+Mirrors how Claude Code actually resolves config:
 
 | Tab | What | Path |
 | --- | --- | --- |
 | **Global Claude** | Your personal user-level config (all projects) | `~/.claude/` |
-| **Global Project** | Team-shared project config (committed to git) | `<project>/.claude/` + `<project>/CLAUDE.md` + `<project>/.mcp.json` |
-| **Local Claude** | Personal overrides for one project (gitignored) | `<project>/.claude/settings.local.json` + `<project>/CLAUDE.local.md` |
-| **Project Local (Enterprise)** | Organization policy deployed by IT (highest precedence) | `/Library/Application Support/ClaudeCode/` (mac), `C:\Program Files\ClaudeCode\` (win), `/etc/claude-code/` (linux) |
+| **Global Project** | Team-shared project config (committed to git) | `<project>/.claude/` + `CLAUDE.md` + `.mcp.json` |
+| **Local Claude** | Personal overrides for one project (gitignored) | `<project>/.claude/settings.local.json` + `CLAUDE.local.md` |
+| **Project Local (Enterprise)** | Organization policy deployed by IT (highest precedence) | `/Library/Application Support/ClaudeCode/` · `C:\Program Files\ClaudeCode\` · `/etc/claude-code/` |
 
-Precedence (lowest → highest, later wins): user → project shared → project local → enterprise.
+Precedence (later wins): user → project shared → project local → enterprise.
 
----
-
-## What it edits
-
-For each scope, the relevant files are surfaced as a sidebar list. Click one to edit:
+### What it edits
 
 - **`settings.json`** — model, permissions (allow/deny/ask), hooks, status line, env, sandbox, telemetry, output style, theme.
-- **Credentials** *(Global Claude only)* — AWS, GCP, Azure, DigitalOcean, Cloudflare, Fly, Vercel, Netlify, Heroku, Railway, GitHub, GitLab, Bitbucket, Postgres, Supabase, Neon, MongoDB, Redis, Slack, Linear, Notion, Atlassian, OpenAI, Anthropic, Mistral, Hugging Face, Stripe, Resend, SendGrid, Sentry, Datadog — masked inputs, eye-toggles, deep links to where to get each token, written into the `env` block of `~/.claude/settings.json`.
-- **`CLAUDE.md`** (and `CLAUDE.local.md`) — markdown editor with line/char counts and 12 section templates (overview, stack, commands, structure, conventions, testing, architecture, hard rules, workflow, tooling, @imports, personal style). Plus four full-doc presets (Karpathy, HumanLayer, Trail of Bits, Minimal personal).
-- **`.mcp.json`** — list of MCP servers with type-specific fields (stdio command/args; http URL/headers; env, alwaysLoad).
-- **`keybindings.json`** — context-scoped key bindings (Chat / Global / Confirmation).
-- **`agents/`** — list view of subagent markdown files; edit frontmatter (name/description/model/effort/tools/isolation) + body. Templates: `code-reviewer`, `security-auditor`, `test-writer`, `debugger`, `docs-writer`.
-- **`commands/`** — slash commands. Templates: `/review`, `/commit`, `/tdd`, `/explore`, `/security-scan`.
-- **`output-styles/`** — frontmatter + body for tone presets. Templates: `terse`, `explanatory`, `pr-review-mode`.
-- **`managed-settings.json`** — enterprise policy.
-
----
-
-## MCP servers
-
-A dedicated **MCP** tab manages the Model Context Protocol servers Claude Code connects to, across all three scopes (user → `~/.claude.json`, project → `.mcp.json`, local → `~/.claude.json` project entry). You can:
-
-- **See** every configured server with its scope, transport (stdio/http/sse/ws), auth model, and `alwaysLoad` state
-- **Enable / disable** a server to save context — since Claude Code has no native per-server disable flag, the app reversibly stashes the config out of the live file and restores it on enable (your other `~/.claude.json` state is preserved, with a backup)
-- **Add / remove / edit** servers (guided fields + a JSON body editor)
-- **Resolve issues**: per-server diagnostics detect the auth model (OAuth / header token / `headersHelper` / env-var) and give the exact fix — including copy-paste `/mcp` (authenticate & reconnect), `claude mcp get <name>`, and `claude mcp reset-project-choices`. Secret values are masked.
-
-> Context tip surfaced in the tab: tool search defers MCP tools by default, so servers barely cost context; `alwaysLoad: true` is what forces them in.
+- **Credentials** *(Global Claude only)* — AWS, GCP, Azure, Cloudflare, Fly, Vercel, Netlify, GitHub, GitLab, Postgres, Supabase, Neon, MongoDB, Redis, Slack, Linear, Notion, OpenAI, Anthropic, Stripe, Sentry, Datadog and more — masked inputs, eye-toggles, deep links, written into the `env` block of `~/.claude/settings.json`.
+- **`CLAUDE.md`** / **`CLAUDE.local.md`** — markdown editor with line/char counts, 12 section templates, and four full-doc presets (Karpathy, HumanLayer, Trail of Bits, Minimal).
+- **`.mcp.json`** · **`keybindings.json`** · **`agents/`** · **`commands/`** · **`output-styles/`** · **`managed-settings.json`** — all guided, all templated.
 
 ---
 
 ## Agent Orchestrator
 
-The **Orchestrator** tab is a live, visual team board for running Claude agents. Launch one agent on a task, or launch several at once — each runs concurrently as its own card, and you watch the work happen in real time.
+A live, visual team board for running Claude agents. Launch one on a task, or launch several at once — each runs concurrently as its own card.
 
-- **See what's already running** — the board's "Running on this machine" section discovers the claude sessions you didn't launch here (terminals, other Claude Code windows) by counting live `claude` processes and tailing recent session transcripts, showing each one's current activity, model, project, and a `claude --resume` command. These are observed read-only.
-- **Launch agents individually** — pick the general agent or any of your subagent definitions (from `~/.claude/agents` and the project's `.claude/agents`), choose the model, permission mode, working directory, and a turn cap, then give it a task. Fire off as many as you like.
-- **Launch a team** — flip the panel to **Team** mode and pick a template (Build squad / Ship crew / Research pod / Bug hunt) or a custom set of roles. Run it **orchestrated** (one lead agent delegates to the roles, shown as one card with the hierarchy) or **parallel** (one agent per role, grouped on the board).
-- **Campaigns** — for multi-week work, create a campaign with an objective and a self-updating plan. Hit **Run next session** whenever you like; each session seeds a fresh agent with the saved plan + recent progress, does a chunk, and writes the plan back — so it survives app restarts and picks up exactly where it left off.
-- **Continue / resume** — any finished run (and any observed terminal session) has a **Continue** action that resumes it with `claude -p --resume <session>`, carrying full prior context.
-- **See the hierarchy** — every tool call, skill, MCP call, and **spawned sub-agent** is rendered as a colour-coded tree as it happens (sub-agents nest under the agent that delegated to them). Pick a subagent at launch and it's delegated to, so the hierarchy shows up on the board.
-- **Track each agent live** — current activity, elapsed time, running cost, tokens, turns, and sub-agent count per card; a global **Skill activity** feed shows which skills/tools are firing across all agents.
-- **Measurement** — a metrics view aggregates finished runs: success rate, total cost and tokens, breakdowns by agent and model, and top skills/tools. Run history persists across restarts.
+- **See what's already running** — discovers `claude` sessions you didn't launch here (other terminals/windows) and shows each one's activity, model, project, and a `claude --resume` command.
+- **Launch agents or a whole team** — pick the general agent or any subagent definition; choose model, permission mode, working dir, turn cap. Run a **team** template (Build squad / Ship crew / Research pod / Bug hunt) **orchestrated** (a lead delegates) or **parallel**.
+- **Campaigns** — multi-week work with a self-updating plan that survives restarts; hit **Run next session** to pick up exactly where it left off.
+- **Watch the hierarchy** — every tool call, skill, MCP call, and spawned sub-agent renders as a color-coded tree as it happens. Live cost, tokens, turns per card; a global skill-activity feed.
+- **Measurement** — aggregate finished runs: success rate, cost, tokens, breakdowns by agent and model.
 
-Under the hood it spawns headless `claude -p … --output-format stream-json` processes and parses the event stream — no extra dependencies, using your already-authenticated `claude` CLI. Stop any agent mid-run, and grab a `claude --resume <session>` command to pick a run back up in your terminal.
+Under the hood it spawns headless `claude -p … --output-format stream-json` and parses the event stream — no extra dependencies, using your already-authenticated `claude` CLI.
 
-> Permission modes map to the CLI: **Plan** (read-only, makes no changes), **Accept edits** (does the work — the default), **Auto** (model decides per call), or **Full auto** (skips every check — only for fully trusted tasks). Requires the `claude` CLI on your `PATH` (or set `CLAUDE_BIN`).
+---
+
+## MCP servers
+
+A dedicated **MCP** tab across all three scopes. **See** every server with its transport/auth/`alwaysLoad` state, **enable/disable** to save context (reversibly stashed, with a backup), **add/edit/remove** with guided fields, and **resolve issues** with per-server diagnostics that give the exact copy-paste fix (`/mcp`, `claude mcp get`, `reset-project-choices`). Secrets masked.
 
 ---
 
 ## Transfer — move your setup to another machine
 
-The **Transfer** tab packs your whole Claude world into one encrypted `.ccsync` file and restores it on another laptop.
+Pack your whole Claude world into one encrypted `.ccsync` file and restore it elsewhere.
 
-- **What goes in** — pick from live-counted categories: `~/.claude.json` (MCP servers with their API keys), settings, global `CLAUDE.md`, agents, skills, commands, keybindings, per-project auto-memory, and this app's own data (orchestrator history, campaigns). Add any extra files or folders under your home directory — `.env` files ride along too.
-- **Real encryption** — the bundle is sealed with AES-256-GCM; the key is derived from your passphrase with scrypt. Nothing readable leaves your machine, so the file is safe to move over AirDrop, iCloud Drive, or a USB stick.
-- **Safe restore** — on the other laptop, run `npx claude-config-ui`, open Transfer, and unlock the bundle. You get a per-file preview (new / changed / identical) with new-and-changed pre-selected; anything you overwrite is backed up first to `~/.claude-config-ui/transfer-backups/<timestamp>/`. Restores refuse paths outside your home directory.
-- **Login stays out on purpose** — the Claude OAuth token is per-machine and refreshes, so it isn't bundled. Run `claude` and `/login` once on the new laptop; your subscription covers multiple machines.
+<p align="center">
+  <img src="docs/media/transfer.png" width="820" alt="Transfer — encrypted bundle export">
+</p>
 
----
-
-## Interface & motion
-
-The whole app is built to feel alive and readable: animated view transitions, staggered entrances, hover-lift cards, count-up metrics, animated expand/collapse, and skeleton loaders — all of which honour `prefers-reduced-motion`. Status is colour-coded like a traffic light — **green** for live / running / healthy, **red** for errors / failures, **amber** for pending / needs-review — so you can read state at a glance.
+- **What goes in** — live-counted categories: `~/.claude.json` (MCP servers + API keys), settings, global `CLAUDE.md`, agents, skills, commands, keybindings, per-project auto-memory, and the app's own data. Add extra files/folders — `.env` files ride along.
+- **Real encryption** — sealed with AES-256-GCM, key derived from your passphrase with scrypt. Safe over AirDrop, iCloud Drive, or a USB stick.
+- **Safe restore** — a per-file preview (new / changed / identical); anything you overwrite is backed up first. Restores refuse paths outside your home directory.
+- **Login stays out on purpose** — the OAuth token is per-machine; run `claude` + `/login` once on the new laptop.
 
 ---
 
-## Home dashboard
+## Projects, sessions & memory
 
-The app opens on a **Home** dashboard — a control center so you're not dropped straight into the dense Global Claude config. It shows KPI cards (projects, sessions + disk used, config health, context-vault coverage), an "At a glance" panel, and **Recommended next steps** derived from your actual setup (e.g. lock down credential reads, enable the sandbox, review a `bypassPermissions` default, add `logic.md` to projects, clean up tiny sessions). Every card and step deep-links into the relevant section.
+A bird's-eye view of every project that uses Claude — discovered by scanning your code roots and decoding the working directories of recent Claude Code sessions. Edit each project's local files inline (`CLAUDE.md`, `.claude/settings.json`, `.mcp.json`, …).
+
+- **Claude sessions** — the same list `/resume` shows, with first prompt, last-worked time, message count, size, and detected project. Sort, **rename**, **reassign**, or **delete** throwaway sessions to reclaim disk.
+- **`logic.md`** — a per-project decision log in a central context vault, so rationale isn't re-litigated across sessions. Toggle **Auto-maintain** to have Claude read + append it every session.
+- **`credentials.md`** — a local-only, masked inventory of the keys each project uses, so you know what exists and when to rotate.
 
 ---
 
-## Projects
+## Design
 
-The **Projects** tab gives you a bird's-eye view of every project on your machine that uses Claude — discovered by scanning your common code roots (`~`, `~/projects`, `~/Developer`, `~/Documents`, …) and decoding the working directories of your recent Claude Code sessions (`~/.claude/projects/`). Projects you've actually used with Claude are flagged and sorted to the top by recency.
-
-It also surfaces folders that aren't git repos and have no `CLAUDE.md`, but that your Claude sessions clearly worked on (e.g. a quick prototype) — promoted into the list automatically.
-
-Pick a project and edit its project-level local files inline, all in one place:
-
-- `CLAUDE.md` · `CLAUDE.local.md` · `summary.md` · `AGENTS.md`
-- `.claude/settings.json` · `.claude/settings.local.json` · `.mcp.json`
-
-Files that don't exist yet show a **new** badge — create them from a template or blank in one click. Every save still writes a timestamped `.bak`, and the same path sandbox applies.
-
-### Claude sessions
-
-Both per-project and as one global **All sessions** list, you can see every Claude Code session (the same ones `/resume` shows) with its first prompt, last-worked time, message count, size, and the project it worked on (auto-detected from the file paths each session touched). You can:
-
-- **Sort** by last worked, first started, message count, size, or name
-- **Rename** a session to a friendly label for easy reference
-- **Reassign** a session to a different project if the auto-detection got it wrong
-- **Delete** small or throwaway sessions to clean up (this frees disk and removes them from `/resume`)
-
-### logic.md — a per-project decision log
-
-Each project gets a `logic.md`: a long-term memory of the decisions, rules, and rationale behind it, so they don't get re-litigated or forgotten across sessions. These files live in a central **context vault** (default `~/ClaudeContext/<project>/`, configurable in the Projects header).
-
-Toggle **Auto-maintain logic.md** to inject a small managed block into your global `~/.claude/CLAUDE.md` that tells Claude to read each project's `logic.md` every session and append decisions (and a summary of the logical instructions you give) as you make them — bringing that context back into scope automatically. Toggle it off to remove the block cleanly.
-
-### credentials.md — track & rotate keys
-
-Each project also gets a `credentials.md` in the same vault: a local-only inventory of the API keys, tokens, and passwords the project uses, so you can see what exists and when to rotate. Because it lives in the vault (outside any git repo) it can't be accidentally committed. The same auto-maintain toggle tells Claude to record any credential you share into it — as a **masked** value (prefix + last 4 only), with where it lives and a rotation status. It's plaintext and meant as a tracker, not a secret store; for high-value secrets use an encrypted store.
+A redesigned, high-contrast **mechanical** interface: a monochrome canvas with a disciplined **primary-color** accent system — **blue** for interactive/active, **red** for live/destructive, **yellow** for warnings — over a precise engineering-grid backdrop. Animated view transitions, count-up metrics, and skeleton loaders throughout, all honoring `prefers-reduced-motion`. A motivational line greets you on open, and a first-run macOS gate walks you through the folder permissions Claude needs to create projects.
 
 ---
 
@@ -202,77 +204,46 @@ Each project also gets a `credentials.md` in the same vault: a local-only invent
 - Node.js 20.9 or newer
 - macOS, Windows, or Linux
 
----
-
 ## Alternative install paths
 
-### From source (for development or contributing)
+**From source:**
 
 ```bash
 git clone https://github.com/HarshitSingh-PM/claude-config-manager.git
 cd claude-config-manager
 npm install
-npm run dev
-# → http://localhost:3000
+npm run dev        # → http://localhost:3000
 ```
 
-### Global install (skip `npx`)
+**Global install:**
 
 ```bash
 npm install -g claude-config-ui
-claude-config-ui
-# or:
-ccm
+claude-config-ui   # or: ccm
 ```
 
-> The npm package is named `claude-config-ui` (the bare `claude-config-manager` was already taken). The GitHub repo keeps the `claude-config-manager` name.
-
----
+> The npm package is `claude-config-ui` (the bare name was taken); the GitHub repo keeps `claude-config-manager`.
 
 ## Configuration
 
-Everything is auto-detected from your operating system. The only thing you set in the UI is the **project directory** for project-scoped tabs (defaults to wherever you launched the tool from). There's no `.env`, no config file, nothing to set up.
-
-To point at a different project, paste its absolute path into the project field at the top of the page.
-
-**Environment variables**:
+Everything is auto-detected. The only thing you set is the **project directory** for project-scoped tabs (defaults to where you launched). No `.env`, no config file.
 
 - `PORT` — override the default `3737`.
-- `CCM_NO_OPEN=1` — don't auto-open the browser on launch.
-
----
-
-## How auto-detection works
-
-- **macOS / Linux**: `~/.claude/` for user scope; `/Library/Application Support/ClaudeCode/` or `/etc/claude-code/` for enterprise.
-- **Windows**: `%APPDATA%\Claude\` for user scope; `C:\Program Files\ClaudeCode\` for enterprise.
-- **Project**: any directory you point at. The tool reads existing files if present and creates them on save if not.
-
-The tool labels each file as `git-tracked` or `gitignored` in the editor so you always know which side of the `.gitignore` you're on.
-
----
+- `CCM_NO_OPEN=1` — don't auto-open the browser.
 
 ## Safety
 
-- Every write makes a timestamped `.bak-*` copy of the existing file first (autosaves create only one `.bak` per file per session — escape valve is the manual Save button).
-- The file API refuses paths outside `~`, `cwd`, and known Claude Code enterprise directories.
-- Deleting a subagent or slash command also writes a backup before removing the original.
-- JSON output is pretty-printed with 2-space indent.
-- Markdown frontmatter is round-tripped via `js-yaml` (preserves keys, drops empties).
-- Credentials are written to the `env` block of `~/.claude/settings.json` — **plain text on disk**. Fine for personal-laptop API keys; for high-blast-radius prod secrets use Claude Code's `apiKeyHelper` instead (a shell command that fetches the value from your keychain at runtime).
-
----
+- Every write makes a timestamped `.bak-*` first (autosave takes one per file per session).
+- The file API refuses paths outside `~`, `cwd`, and known enterprise dirs; the same sandbox applies to the terminal file tree and viewer.
+- Terminal transcripts are stored locally under `~/.claude-config-ui/terminals/` (most-recent 100 retained).
+- Credentials are written to the `env` block of `~/.claude/settings.json` — **plain text on disk**. Fine for personal API keys; for high-blast-radius secrets use Claude Code's `apiKeyHelper` instead.
 
 ## Stack
 
-- Next.js 16 (App Router, Turbopack, React 19.2) — standalone server output for npx
-- TypeScript strict
-- Tailwind CSS 4
-- Framer Motion (animations)
-- Radix UI Tooltip (accessible tooltips)
-- Lucide icons
-- `js-yaml` for frontmatter parsing
-- Electron (Mac `.dmg` distribution only — npm package is pure Node)
+- Next.js 16 (App Router, Turbopack, React 19.2) — standalone server output for `npx`
+- TypeScript strict · Tailwind CSS 4 · Framer Motion · Radix UI · Lucide
+- `node-pty` + `@xterm/xterm` for the embedded terminals (N-API prebuilds — no native rebuild)
+- Electron for the desktop `.dmg` / `.exe` distribution (the npm package is pure Node)
 
 ## Building desktop apps yourself
 
@@ -280,42 +251,18 @@ The tool labels each file as `git-tracked` or `gitignored` in the editor so you 
 npm install
 npm run dmg          # macOS arm64 .dmg → dist-electron/
 npm run exe          # Windows x64 NSIS .exe → dist-electron/
-# explicit arch:
-npx electron-builder --mac dmg --x64       # Intel Mac .dmg
-npx electron-builder --win nsis --x64      # Windows x64 .exe
 ```
 
-> **Cross-compiling to Windows from Apple Silicon Macs** needs Rosetta installed (electron-builder uses an x86_64 `wine64` binary to set the .exe's icon and version metadata). One-time setup: `sudo softwareupdate --install-rosetta --agree-to-license`.
-
-Builds are unsigned by default. To sign for distribution: set `mac.identity` to your Apple Developer cert name in `package.json#build.mac` (and flip `mac.hardenedRuntime` to `true`); for Windows, add `win.certificateFile` + `certificatePassword` (or use Azure SignTool).
-
----
+> Cross-compiling to Windows from Apple Silicon needs Rosetta (`sudo softwareupdate --install-rosetta --agree-to-license`). Builds are unsigned by default — set `mac.identity` / `win.certificateFile` in `package.json#build` to sign for distribution.
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). The easiest contributions:
-
-- Add a new service to the Credentials catalog (`src/lib/credentialsCatalog.ts`)
-- Add a new CLAUDE.md section template (`src/lib/presets/claudemdSections.ts`)
-- Add a new subagent / slash command template (`src/lib/presets/agents.ts`, `commands.ts`)
-
----
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Easy wins: add a service to the Credentials catalog, a `CLAUDE.md` section template, or a subagent / slash-command template (`src/lib/presets/`).
 
 ## License
 
 MIT. See [LICENSE](./LICENSE).
 
----
-
 ## Acknowledgements
 
-Schema and presets are drawn from:
-
-- Official Claude Code docs (docs.claude.com)
-- [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code)
-- [trailofbits/claude-code-config](https://github.com/trailofbits/claude-code-config)
-- [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents)
-- [wshobson/commands](https://github.com/wshobson/commands)
-- HumanLayer's "Writing a good CLAUDE.md"
-- Karpathy's trending CLAUDE.md gist
-- [disler/claude-code-hooks-mastery](https://github.com/disler/claude-code-hooks-mastery)
+Schema and presets drawn from the official Claude Code docs, [awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code), [trailofbits/claude-code-config](https://github.com/trailofbits/claude-code-config), [awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents), [wshobson/commands](https://github.com/wshobson/commands), HumanLayer's "Writing a good CLAUDE.md", Karpathy's CLAUDE.md gist, and [claude-code-hooks-mastery](https://github.com/disler/claude-code-hooks-mastery). Terminal file-tree UX inspired by Nimbalyst.
