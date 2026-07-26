@@ -16,7 +16,7 @@ import {
   FolderTree,
 } from "lucide-react";
 import { TerminalPane } from "./TerminalPane";
-import { FileTree } from "./FileTree";
+import { FileTree, CCM_PATH_MIME } from "./FileTree";
 import { FileViewer } from "./FileViewer";
 import { ControlBar } from "./ControlBar";
 import { TerminalHistory } from "./TerminalHistory";
@@ -79,22 +79,46 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
 
   // Write raw bytes to the focused pane's session (used by the control bar).
   const focusedSessionId = panes[focused] ?? null;
+  const sendToSession = useCallback((id: string | null, data: string) => {
+    if (!id) return;
+    fetch(`/api/terminal/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "input", data }),
+    }).catch(() => {});
+  }, []);
+
   const sendToFocused = useCallback(
-    (data: string) => {
-      if (!focusedSessionId) return;
-      fetch(`/api/terminal/${focusedSessionId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ op: "input", data }),
-      }).catch(() => {});
+    (data: string) => sendToSession(focusedSessionId, data),
+    [focusedSessionId, sendToSession],
+  );
+
+  // Drop a dragged file-tree path (or Finder file) into a SPECIFIC pane's
+  // session — used by the per-pane drop targets in the grid.
+  const dropPathOnPane = useCallback(
+    (e: ReactDragEvent, paneIndex: number, sid: string | null) => {
+      const inApp = e.dataTransfer.getData(CCM_PATH_MIME);
+      let paths: string[] = [];
+      if (inApp) {
+        paths = [inApp];
+      } else {
+        paths = Array.from(e.dataTransfer.files || [])
+          .map((f) => resolveDroppedPath(f))
+          .filter((p): p is string => Boolean(p));
+      }
+      if (!paths.length) return false;
+      setFocused(paneIndex);
+      if (sid) sendToSession(sid, paths.map(shellQuote).join(" ") + " ");
+      return true;
     },
-    [focusedSessionId],
+    [sendToSession],
   );
 
   // ─── Drag & drop: dropped files/folders resolve to absolute paths. ───
   // Paths are pasted into the focused terminal (shell-quoted), and a dropped
   // folder also becomes the workspace root so the file tree jumps to it.
   const [dragging, setDragging] = useState(false);
+  const [dropPane, setDropPane] = useState<number | null>(null);
   const dragDepth = useRef(0);
 
   const onDrop = useCallback(
@@ -285,6 +309,14 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
     setFocused(paneIdx);
   };
 
+  // Clicking a session chip: if it's already on screen, focus that pane (so the
+  // workspace tree jumps to its folder); otherwise drop it into the focused pane.
+  const focusSession = (id: string) => {
+    const shown = panes.indexOf(id);
+    if (shown !== -1) setFocused(shown);
+    else assignToPane(focused, id);
+  };
+
   const openTerminalHere = (dir: string) => {
     setNewCwd(dir);
     createSession("shell", dir);
@@ -367,12 +399,14 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
         <div className="inline-flex items-center gap-1.5">
           <button
             onClick={() => createSession("shell")}
+            title="Open a plain login shell in the current workspace folder. No agent — just a terminal."
             className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] border border-[color:var(--border-strong)] bg-[color:var(--bg-elev-2)] px-3 text-[13px] font-medium text-[color:var(--fg)] transition hover:border-[color:var(--accent)]/50 hover:bg-[color:var(--bg-elev-3)]"
           >
             <Plus size={14} /> Shell
           </button>
           <button
             onClick={() => createSession("claude")}
+            title="Launch the Claude Code CLI in this folder — a full agent session you can drive with the control bar below."
             className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] bg-[linear-gradient(100deg,var(--accent),var(--accent-2))] px-3 text-[13px] font-semibold text-[color:var(--accent-ink)] transition hover:brightness-110 shadow-[0_4px_16px_var(--accent-glow)]"
           >
             <Sparkles size={14} /> Claude
@@ -440,7 +474,7 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
                 }`}
               >
                 <button
-                  onClick={() => assignToPane(focused, s.id)}
+                  onClick={() => focusSession(s.id)}
                   className="inline-flex items-center gap-1.5"
                   title={`${s.title} · ${s.cwd}`}
                 >
@@ -488,7 +522,35 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
         <div className="relative min-h-0 flex-1">
         <div className={`grid h-full min-h-0 gap-2 ${gridClass[layout]}`}>
           {panes.slice(0, layout).map((sid, i) => (
-            <div key={i} className="min-h-0 min-w-0">
+            <div
+              key={i}
+              className={`relative min-h-0 min-w-0 rounded-lg ${
+                dropPane === i ? "ring-2 ring-[color:var(--accent)] ring-offset-2 ring-offset-[color:var(--bg)]" : ""
+              }`}
+              onDragOver={(e) => {
+                // Accept a dragged file-tree path or a Finder file onto this pane.
+                if (
+                  e.dataTransfer.types.includes(CCM_PATH_MIME) ||
+                  e.dataTransfer.types.includes("Files")
+                ) {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                  if (dropPane !== i) setDropPane(i);
+                }
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropPane(null);
+              }}
+              onDrop={(e) => {
+                setDropPane(null);
+                setDragging(false);
+                dragDepth.current = 0;
+                if (dropPathOnPane(e, i, sid)) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
+            >
               {sid && sessionById.has(sid) ? (
                 <TerminalPane
                   sessionId={sid}

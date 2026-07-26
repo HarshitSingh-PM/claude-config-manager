@@ -20,31 +20,33 @@ import {
 // CLI itself works.
 
 const MODELS = [
-  { label: "Opus", arg: "opus" },
-  { label: "Sonnet", arg: "sonnet" },
-  { label: "Haiku", arg: "haiku" },
-  { label: "Opus Plan", arg: "opusplan" },
-  { label: "Opus 1M", arg: "opus[1m]" },
-  { label: "Default", arg: "default" },
+  { label: "Opus", arg: "opus", desc: "Most capable — best for hard tasks. Highest cost & latency." },
+  { label: "Sonnet", arg: "sonnet", desc: "Balanced quality/speed — a strong everyday default." },
+  { label: "Haiku", arg: "haiku", desc: "Fastest & cheapest — great for simple, high-volume work." },
+  { label: "Opus Plan", arg: "opusplan", desc: "Opus while planning, Sonnet to execute — quality where it counts, cheaper to run." },
+  { label: "Opus 1M", arg: "opus[1m]", desc: "Opus with a 1M-token context — for very large codebases (uses more of your limit)." },
+  { label: "Default", arg: "default", desc: "Clear the override — use your account default." },
 ];
 const EFFORTS = [
-  { label: "Low", arg: "low" },
-  { label: "Medium", arg: "medium" },
-  { label: "High", arg: "high" },
-  { label: "X-High", arg: "xhigh" },
-  { label: "Max", arg: "max" },
+  { label: "Low", arg: "low", desc: "Fewer reasoning tokens — fastest & cheapest. Good for routine edits." },
+  { label: "Medium", arg: "medium", desc: "Moderate reasoning — a balanced default." },
+  { label: "High", arg: "high", desc: "More reasoning — better on tricky problems, slower & pricier." },
+  { label: "X-High", arg: "xhigh", desc: "Deep reasoning — for complex, multi-step work." },
+  { label: "Max", arg: "max", desc: "Maximum reasoning — highest quality, slowest & most tokens." },
 ];
 
 function Dropdown({
   icon,
   label,
+  hint,
   items,
   onPick,
   disabled,
 }: {
   icon: React.ReactNode;
   label: string;
-  items: { label: string; arg: string }[];
+  hint: string;
+  items: { label: string; arg: string; desc: string }[];
   onPick: (arg: string) => void;
   disabled: boolean;
 }) {
@@ -64,6 +66,7 @@ function Dropdown({
       <button
         onClick={() => !disabled && setOpen((v) => !v)}
         disabled={disabled}
+        title={hint}
         className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[color:var(--border)] bg-[color:var(--bg-elev)] px-2 text-[11px] text-[color:var(--fg-muted)] transition hover:text-[color:var(--fg)] disabled:opacity-40"
       >
         {icon}
@@ -71,7 +74,7 @@ function Dropdown({
         <ChevronDown size={11} className={`transition ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute bottom-full left-0 z-30 mb-1 min-w-[130px] overflow-hidden rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-elev-2)] py-1 shadow-xl">
+        <div className="absolute bottom-full left-0 z-30 mb-1 w-[248px] overflow-hidden rounded-lg border border-[color:var(--border)] bg-[color:var(--bg-elev-2)] py-1 shadow-xl">
           {items.map((it) => (
             <button
               key={it.arg}
@@ -79,11 +82,16 @@ function Dropdown({
                 onPick(it.arg);
                 setOpen(false);
               }}
-              className="flex w-full items-center px-3 py-1.5 text-left text-[11px] text-[color:var(--fg-muted)] transition hover:bg-[color:var(--accent-soft)] hover:text-[color:var(--accent)]"
+              className="group/it flex w-full flex-col px-3 py-1.5 text-left transition hover:bg-[color:var(--accent-soft)]"
             >
-              {it.label}
-              <span className="ml-auto font-mono text-[9px] text-[color:var(--fg-faint)]">
-                {it.arg}
+              <span className="flex items-center text-[11px] text-[color:var(--fg)]">
+                {it.label}
+                <span className="ml-auto font-mono text-[9px] text-[color:var(--fg-faint)]">
+                  {it.arg}
+                </span>
+              </span>
+              <span className="mt-0.5 text-[10px] leading-snug text-[color:var(--fg-faint)] group-hover/it:text-[color:var(--fg-muted)]">
+                {it.desc}
               </span>
             </button>
           ))}
@@ -96,11 +104,13 @@ function Dropdown({
 function QuickBtn({
   icon,
   label,
+  title,
   onClick,
   disabled,
 }: {
   icon: React.ReactNode;
   label: string;
+  title?: string;
   onClick: () => void;
   disabled: boolean;
 }) {
@@ -108,7 +118,7 @@ function QuickBtn({
     <button
       onClick={onClick}
       disabled={disabled}
-      title={label}
+      title={title ?? label}
       className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[color:var(--border)] bg-[color:var(--bg-elev)] px-2 text-[11px] text-[color:var(--fg-muted)] transition hover:text-[color:var(--fg)] disabled:opacity-40"
     >
       {icon}
@@ -138,6 +148,7 @@ export function ControlBar({
       <Dropdown
         icon={<Cpu size={12} />}
         label="Model"
+        hint="Which model runs in the focused session. Bigger models are smarter but slower and use more of your usage limit."
         items={MODELS}
         onPick={(a) => cmd(`/model ${a}`)}
         disabled={disabled}
@@ -145,6 +156,7 @@ export function ControlBar({
       <Dropdown
         icon={<Gauge size={12} />}
         label="Effort"
+        hint="How much the model reasons before answering. Higher effort improves hard-problem quality but is slower and spends more tokens."
         items={EFFORTS}
         onPick={(a) => cmd(`/effort ${a}`)}
         disabled={disabled}
@@ -152,22 +164,24 @@ export function ControlBar({
       <QuickBtn
         icon={<ShieldHalf size={12} />}
         label="Permission ⇧⇥"
+        title="Cycle the permission mode (Shift+Tab): Manual → Accept edits → Plan. Looser modes = fewer prompts and faster flow, but Claude acts with less oversight."
         onClick={() => onSend("\x1b[Z")}
         disabled={disabled}
       />
       <QuickBtn
         icon={<Brain size={12} />}
         label="Thinking ⌥T"
+        title="Toggle extended thinking (Option+T). On = deeper reasoning on complex tasks (more tokens); off = faster, leaner replies."
         onClick={() => onSend("\x1bt")}
         disabled={disabled}
       />
 
       <span className="mx-1 h-4 w-px bg-[color:var(--border)]" />
 
-      <QuickBtn icon={<Layers size={12} />} label="/context" onClick={() => cmd("/context")} disabled={disabled} />
-      <QuickBtn icon={<Layers size={12} />} label="/compact" onClick={() => cmd("/compact")} disabled={disabled} />
-      <QuickBtn icon={<Trash2 size={12} />} label="/clear" onClick={() => cmd("/clear")} disabled={disabled} />
-      <QuickBtn icon={<BookOpen size={12} />} label="/help" onClick={() => cmd("/help")} disabled={disabled} />
+      <QuickBtn icon={<Layers size={12} />} label="/context" title="Show the context-window usage breakdown — see what's filling the window and how much room is left." onClick={() => cmd("/context")} disabled={disabled} />
+      <QuickBtn icon={<Layers size={12} />} label="/compact" title="Summarize & compress the conversation to reclaim context space — improves speed/quality when the window is getting full." onClick={() => cmd("/compact")} disabled={disabled} />
+      <QuickBtn icon={<Trash2 size={12} />} label="/clear" title="Start a fresh conversation (keeps project memory) — the cleanest way to reset a bloated context." onClick={() => cmd("/clear")} disabled={disabled} />
+      <QuickBtn icon={<BookOpen size={12} />} label="/help" title="List all available slash commands in the session." onClick={() => cmd("/help")} disabled={disabled} />
 
       <span className="ml-auto text-[10px] text-[color:var(--fg-faint)]">
         {targetLabel ? (

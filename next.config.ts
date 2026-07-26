@@ -50,6 +50,7 @@ const nextConfig: NextConfig = {
     "/api/fs-tree": HEAVY_EXCLUDES,
     "/api/file-raw": HEAVY_EXCLUDES,
     "/api/usage": HEAVY_EXCLUDES,
+    "/api/conversations": HEAVY_EXCLUDES,
     // Pre-existing fs-touching routes that were missing from the list.
     "/api/file": HEAVY_EXCLUDES,
     "/api/paths": HEAVY_EXCLUDES,

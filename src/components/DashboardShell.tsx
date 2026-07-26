@@ -8,7 +8,6 @@ import {
   Database,
   BrainCircuit,
   KeyRound,
-  Wrench,
   Library,
   Settings as SettingsIcon,
   ArrowRight,
@@ -24,7 +23,7 @@ import { Card } from "./primitives";
 import { relTime } from "./SessionsPanel";
 import { Reveal, Stagger, AnimatedNumber, Skeleton, fadeUp, SPRING } from "./motion";
 
-type View = "config" | "projects" | "build" | "library";
+type View = "config" | "projects" | "library";
 
 type Dashboard = {
   home: string;
@@ -349,7 +348,6 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
           <Stagger className="grid grid-cols-2 gap-3" stagger={0.05}>
             <JumpCard icon={<SettingsIcon size={16} />} label="Config" hint="settings, MCP, hooks" onClick={() => onNavigate("config")} />
             <JumpCard icon={<FolderGit2 size={16} />} label="Projects" hint="files & sessions" onClick={() => onNavigate("projects")} />
-            <JumpCard icon={<Wrench size={16} />} label="Build" hint="agents, commands" onClick={() => onNavigate("build")} />
             <JumpCard icon={<Library size={16} />} label="Library" hint="browse presets" onClick={() => onNavigate("library")} />
           </Stagger>
         </div>

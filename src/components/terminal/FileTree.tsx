@@ -81,7 +81,12 @@ function Node({
         }`}
         style={{ paddingLeft: 4 + depth * 12 }}
       >
-        <button onClick={toggle} className="flex min-w-0 flex-1 items-center gap-1 text-left">
+        <button
+          onClick={toggle}
+          draggable
+          onDragStart={(e) => startPathDrag(e, path)}
+          className="flex min-w-0 flex-1 items-center gap-1 text-left cursor-grab active:cursor-grabbing"
+        >
           <ChevronRight
             size={12}
             className={`shrink-0 transition-transform ${open ? "rotate-90" : ""} text-[color:var(--fg-faint)]`}
@@ -157,7 +162,18 @@ function Node({
   );
 }
 
-// A clickable file row. Viewable files open the in-app viewer; others are inert.
+// Drag payload used across the app: an absolute path a terminal pane can paste.
+// (see TerminalShell's pane drop handler.)
+export const CCM_PATH_MIME = "text/x-ccm-path";
+export function startPathDrag(e: React.DragEvent, path: string) {
+  e.dataTransfer.setData(CCM_PATH_MIME, path);
+  e.dataTransfer.setData("text/plain", path);
+  e.dataTransfer.effectAllowed = "copy";
+}
+
+// A clickable, DRAGGABLE file row. Click opens viewable files in the viewer;
+// drag drops the file's path into a terminal pane. Non-viewable files are still
+// draggable (you just can't open them inline).
 function FileRow({
   path,
   name,
@@ -174,17 +190,18 @@ function FileRow({
   const viewable = VIEWABLE.test(name);
   return (
     <button
+      draggable
+      onDragStart={(e) => startPathDrag(e, path)}
       onClick={() => viewable && onOpenFile(path)}
-      disabled={!viewable}
-      title={viewable ? `Open ${name}` : name}
+      title={viewable ? `Open ${name} — or drag into a terminal` : `Drag ${name} into a terminal`}
       style={{ paddingLeft: indent }}
-      className={`flex w-full items-center gap-1 rounded px-1 py-[3px] text-left text-xs transition-colors ${
+      className={`flex w-full items-center gap-1 rounded px-1 py-[3px] text-left text-xs transition-colors cursor-grab active:cursor-grabbing ${
         active
           ? "bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
           : viewable
             ? "text-[color:var(--fg-muted)] hover:bg-[color:var(--bg-elev-2)] hover:text-[color:var(--fg)]"
-            : "text-[color:var(--fg-faint)]"
-      } ${viewable ? "cursor-pointer" : "cursor-default"}`}
+            : "text-[color:var(--fg-faint)] hover:bg-[color:var(--bg-elev-2)]"
+      }`}
     >
       <FileIcon size={12} className="shrink-0" />
       <span className="truncate">{name}</span>

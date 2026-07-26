@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, Textarea, Toggle } from "./primitives";
+import { ConversationArchive } from "./ConversationArchive";
 import { Stagger, fadeUp, SPRING } from "./motion";
 import {
   SessionsView,
@@ -239,6 +240,10 @@ export function ProjectsShell() {
           setReloadKey((k) => k + 1);
         }}
       />
+
+      <div className="mt-4">
+        <ConversationArchive />
+      </div>
 
       <AnimatePresence mode="wait">
       <motion.div

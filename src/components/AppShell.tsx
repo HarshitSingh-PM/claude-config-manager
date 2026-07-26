@@ -20,7 +20,6 @@ import {
   Zap,
   KeyRound,
   TerminalSquare,
-  Wrench,
   Library,
   FolderGit2,
   LayoutDashboard,
@@ -39,7 +38,6 @@ import { DirEditor } from "./forms/DirEditor";
 import { SkillsDirEditor } from "./forms/SkillsDirEditor";
 import { CredentialsForm } from "./forms/CredentialsForm";
 import { StatusLineForm } from "./forms/StatusLineForm";
-import { BuildShell } from "./BuildShell";
 import { LibraryShell } from "./LibraryShell";
 import { ProjectsShell } from "./ProjectsShell";
 import { DashboardShell } from "./DashboardShell";
@@ -60,7 +58,6 @@ type View =
   | "mcp"
   | "orchestrator"
   | "transfer"
-  | "build"
   | "library";
 const NAV: { v: View; label: string; Icon: typeof SettingsIcon }[] = [
   { v: "home", label: "Home", Icon: LayoutDashboard },
@@ -70,7 +67,6 @@ const NAV: { v: View; label: string; Icon: typeof SettingsIcon }[] = [
   { v: "mcp", label: "MCP", Icon: ServerCog },
   { v: "orchestrator", label: "Orchestrator", Icon: Network },
   { v: "transfer", label: "Transfer", Icon: ArrowLeftRight },
-  { v: "build", label: "Build", Icon: Wrench },
   { v: "library", label: "Library", Icon: Library },
 ];
 
@@ -495,8 +491,6 @@ export function AppShell() {
           <OrchestratorShell projectDir={projectDir} />
         ) : view === "transfer" ? (
           <TransferShell />
-        ) : view === "build" ? (
-          <BuildShell />
         ) : view === "projects" ? (
           <ProjectsShell />
         ) : view === "library" ? (
