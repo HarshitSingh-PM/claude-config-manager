@@ -43,7 +43,7 @@ The headline feature: a **full terminal environment for Claude Code, inside the 
 - **Split 1 / 2 / 3 / 4 ways** — a layout switcher tiles panes so you can run four agents side-by-side and multitask like a cockpit.
 - **A file tree that follows your work** — a Nimbalyst-style workspace tree on the left. Click a pane (or `cd` into a project) and the tree **jumps to that folder automatically** so its files are right there. "Open terminal here" on any folder.
 - **A control bar for Claude** — a bottom strip that drives the focused session the way you would: pick the **model** and **effort**, cycle **permission mode** (⇧⇥), toggle **extended thinking** (⌥T), and fire `/context`, `/compact`, `/clear`, `/help` — no typing.
-- **Drag & drop files** → their absolute paths paste straight into the focused terminal (a dropped folder also becomes the workspace root).
+- **Drag & drop paths** → drag any file/folder from the workspace tree (or from Finder) straight onto a terminal pane and its absolute path pastes in — no copying long paths by hand.
 - **Transcripts that survive restarts** — every session is saved to disk. A **History** browser lets you re-open any past session's transcript (colors preserved) or reopen its folder in a fresh terminal. Quit the app mid-run? Your record is still there.
 - **A built-in file viewer** — click any file in the tree to open it inline:
   - **Markdown** — rendered preview ⇄ editor, save with ⌘S
@@ -74,6 +74,7 @@ No more guessing when you'll hit a limit mid-flow.
 | 🧭 **Agent Orchestrator** | A live board to launch one agent or a whole team, watch the tool/sub-agent tree render in real time, and resume any run. Discovers agents already running on your machine. |
 | 📦 **Encrypted Transfer** | Pack your entire Claude world into one AES-256-GCM `.ccsync` file and restore it on another laptop with a per-file preview. |
 | 🗂️ **Projects & sessions** | A bird's-eye view of every project that uses Claude, plus a per-project decision log (`logic.md`) and key tracker (`credentials.md`). |
+| 💬 **Conversation archive** | Saves a verbatim Markdown copy of every Claude Code conversation, grouped per project — a readable local record that costs **zero context-window tokens**. |
 | 🏠 **Home dashboard** | Opens on a control center: KPI tiles + **Recommended next steps** derived from your actual setup (lock down credentials, enable the sandbox, review a risky `bypassPermissions` default…). |
 
 ---
@@ -190,6 +191,7 @@ A bird's-eye view of every project that uses Claude — discovered by scanning y
 - **Claude sessions** — the same list `/resume` shows, with first prompt, last-worked time, message count, size, and detected project. Sort, **rename**, **reassign**, or **delete** throwaway sessions to reclaim disk.
 - **`logic.md`** — a per-project decision log in a central context vault, so rationale isn't re-litigated across sessions. Toggle **Auto-maintain** to have Claude read + append it every session.
 - **`credentials.md`** — a local-only, masked inventory of the keys each project uses, so you know what exists and when to rotate.
+- **Conversation archive** — one click (or auto, on app open) writes a verbatim **Markdown** copy of every Claude Code conversation to `~/.claude-config-ui/conversations/<project>/`, in plain "You / Claude" turns with no summarization. It only reads the session files Claude already wrote and writes separate `.md`s — it never feeds anything back to Claude, so it uses **zero context-window tokens**.
 
 ---
 
