@@ -50,6 +50,7 @@ The headline feature: a **full terminal environment for Claude Code, inside the 
   - **HTML** — live sandboxed preview ⇄ source
   - **PDF** — native viewer
   - **Images & code** — inline
+- **Drop-to-read, anywhere** — drag a `.md` / `.pdf` / text file from Finder onto any view (or from the workspace tree onto the header) and it opens in a full-screen reader. Read-only, instant, Esc to close.
 
 ---
 
@@ -60,6 +61,7 @@ A gauge next to the header shows exactly how much you have left — pulled from 
 - **5-hour window**, **weekly**, and **per-model weekly** (Fable 5 / Opus) remaining
 - Live **"resets in…" countdowns** for each
 - Color-coded: comfortable → low → critical
+- **Home shows the full picture** — a token strip on the dashboard with your **all-time tokens used** (computed locally from your session transcripts), plus 5-hour, weekly, and Fable 5 weekly remaining at a glance
 
 No more guessing when you'll hit a limit mid-flow.
 
@@ -153,8 +155,9 @@ Precedence (later wins): user → project shared → project local → enterpris
 
 A live, visual team board for running Claude agents. Launch one on a task, or launch several at once — each runs concurrently as its own card.
 
+- **Crews — CrewAI-style pipelines, zero code** — build reusable multi-agent pipelines entirely in the UI: define agents (role / goal / backstory / model / permissions), give them tasks in sequence, wire **which task's output feeds which** with checkboxes, and watch a live flow diagram redraw as you edit. Save the crew, then **Run** it any time — it asks only for your declared `{inputs}` and executes step by step, handing each agent's output to the next, with per-step status, outputs, and cost. Sequential or manager-delegated (hierarchical) modes.
 - **See what's already running** — discovers `claude` sessions you didn't launch here (other terminals/windows) and shows each one's activity, model, project, and a `claude --resume` command.
-- **Launch agents or a whole team** — pick the general agent or any subagent definition; choose model, permission mode, working dir, turn cap. Run a **team** template (Build squad / Ship crew / Research pod / Bug hunt) **orchestrated** (a lead delegates) or **parallel**.
+- **Run a team preset** — pick the general agent or any subagent definition; choose model, permission mode, working dir, turn cap. Run a **team** template (Build squad / Ship crew / Research pod / Bug hunt) **orchestrated** (a lead delegates) or **parallel**.
 - **Campaigns** — multi-week work with a self-updating plan that survives restarts; hit **Run next session** to pick up exactly where it left off.
 - **Watch the hierarchy** — every tool call, skill, MCP call, and spawned sub-agent renders as a color-coded tree as it happens. Live cost, tokens, turns per card; a global skill-activity feed.
 - **Measurement** — aggregate finished runs: success rate, cost, tokens, breakdowns by agent and model.

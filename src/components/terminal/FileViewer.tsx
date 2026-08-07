@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   X,
   Save,
@@ -57,6 +57,14 @@ export function FileViewer({
   const previewable = kind === "markdown" || kind === "html";
   const dirty = draft !== content;
 
+  // Hold the toast callback in a ref: parents pass inline arrows, and having
+  // it in `load`'s deps re-fired the load effect on every parent render —
+  // overwriting the draft with on-disk content every few seconds while typing.
+  const toastRef = useRef(onToast);
+  useEffect(() => {
+    toastRef.current = onToast;
+  }, [onToast]);
+
   const load = useCallback(async () => {
     if (kind === "pdf" || kind === "image" || kind === "unsupported") {
       setLoading(false);
@@ -71,11 +79,11 @@ export function FileViewer({
       setDraft(raw);
       setExists(Boolean(data.exists));
     } catch (err) {
-      onToast?.("err", `Could not read file: ${err}`);
+      toastRef.current?.("err", `Could not read file: ${err}`);
     } finally {
       setLoading(false);
     }
-  }, [path, kind, onToast]);
+  }, [path, kind]);
 
   useEffect(() => {
     // Renderable files (md/html) open in preview; code opens in edit.

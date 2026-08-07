@@ -110,8 +110,18 @@ async function claudeSessionCwds(): Promise<Map<string, number>> {
         if (st.mtimeMs > newest) newest = st.mtimeMs;
         if (!cwd) {
           try {
+            // Read only the first 64KB — transcripts can be hundreds of MB,
+            // and the `cwd` field always appears within the first few lines.
             // eslint-disable-next-line no-await-in-loop
-            const head = await fs.readFile(full, "utf8");
+            const fh = await fs.open(full, "r");
+            let head = "";
+            try {
+              const buf = Buffer.alloc(64 * 1024);
+              const { bytesRead } = await fh.read(buf, 0, buf.length, 0);
+              head = buf.toString("utf8", 0, bytesRead);
+            } finally {
+              await fh.close();
+            }
             // The `cwd` field isn't always on line 0 — early lines can be
             // metadata. Scan the first chunk of lines until we find it.
             for (const line of head.split("\n", 40)) {

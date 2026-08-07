@@ -16,7 +16,10 @@ let mainWindow = null;
 // PID file: holds the spawned server's PID. If the parent is force-killed,
 // the child becomes an orphan. On next launch we read this file and try to
 // reap whatever's still alive before starting fresh.
-const PID_FILE = path.join(os.tmpdir(), "claude-config-ui.server.pid");
+// Lives in the app's private userData dir — NOT os.tmpdir(), which is
+// world-writable (another local user could plant a PID and have us kill an
+// arbitrary process of theirs on launch).
+const PID_FILE = path.join(app.getPath("userData"), "server.pid");
 
 function reapStaleChild() {
   try {
@@ -296,7 +299,14 @@ function buildMenu() {
 }
 
 // ─── App lifecycle ────────────────────────────────────────────
+// Single-instance lock — acquired BEFORE the ready handler is registered, so
+// a losing second instance can never reach startServer()/reapStaleChild()
+// (which would kill the first instance's server via the PID file).
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) app.quit();
+
 app.whenReady().then(async () => {
+  if (!gotLock) return; // quitting — don't touch the other instance's server
   try {
     await startServer();
     buildMenu();
@@ -332,11 +342,7 @@ for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) {
 // Node process exit (e.g. uncaught exception path)
 process.on("exit", killServer);
 
-// Single-instance lock — don't launch twice
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) {
-  app.quit();
-} else {
+if (gotLock) {
   app.on("second-instance", () => {
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();

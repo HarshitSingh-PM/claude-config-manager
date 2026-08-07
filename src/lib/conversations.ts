@@ -183,7 +183,9 @@ export async function archiveAll(
       proj.sessions++;
 
       const outDir = path.join(ARCHIVE_ROOT, slug(name));
-      const outFile = path.join(outDir, `${parsed.sessionId}.md`);
+      // sessionId comes from the transcript's own content — slug it so a
+      // malicious "../../x" value can't write outside the archive root.
+      const outFile = path.join(outDir, `${slug(parsed.sessionId)}.md`);
 
       // Incremental: only (re)write if the source is newer than the archive.
       let needsWrite = true;

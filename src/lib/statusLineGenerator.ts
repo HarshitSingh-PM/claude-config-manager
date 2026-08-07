@@ -32,11 +32,10 @@ export function generateScript(cfg: StatusLineConfig): string {
     padding: cfg.padding,
   });
 
-  // Escape the separator for embedding in a bash double-quoted string.
-  // The simplest path: write it as a raw bash literal by escaping " and \.
-  const sepLiteral = cfg.separator
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"');
+  // Embed the separator as a bash SINGLE-quoted literal — double quotes would
+  // still expand $VAR, $(…) and backticks, i.e. shell injection on every
+  // prompt render. In single quotes only ' needs escaping ('\'' dance).
+  const sepLiteral = `'${cfg.separator.replace(/'/g, `'\\''`)}'`;
 
   const partBlocks = selected
     .map(
@@ -58,7 +57,7 @@ ${CONFIG_MARKER} ${cfgJson}
 
 set +e
 INPUT=$(cat)
-SEP="${sepLiteral}"
+SEP=${sepLiteral}
 
 parts=()
 ${partBlocks}

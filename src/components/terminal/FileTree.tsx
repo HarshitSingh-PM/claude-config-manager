@@ -126,7 +126,7 @@ function Node({
           {data?.entries.map((e) =>
             e.isDir ? (
               <Node
-                key={e.name}
+                key={`${path}/${e.name}`}
                 path={`${path}/${e.name}`}
                 name={e.name}
                 depth={depth + 1}
@@ -139,7 +139,7 @@ function Node({
               />
             ) : (
               <FileRow
-                key={e.name}
+                key={`${path}/${e.name}`}
                 path={`${path}/${e.name}`}
                 name={e.name}
                 indent={4 + (depth + 1) * 12 + 13}
@@ -222,6 +222,8 @@ export function FileTree({
 }) {
   const [root, setRoot] = useState<string>(cwd);
   const [data, setData] = useState<DirData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [homeDir, setHomeDir] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -231,7 +233,17 @@ export function FileTree({
   }, [cwd]);
 
   const load = useCallback(async () => {
-    setData(await fetchDir(root, showAll));
+    const d = await fetchDir(root, showAll);
+    if (d) {
+      setData(d);
+      setHomeDir(d.home);
+      setError(null);
+    } else {
+      // Keep the failure distinct from "still loading" — the root can point
+      // outside home (terminal cwd, dropped folder) and 403 forever.
+      setData(null);
+      setError("Can't browse this folder — it's outside your home directory or unreadable.");
+    }
   }, [root, showAll]);
 
   useEffect(() => {
@@ -239,12 +251,27 @@ export function FileTree({
     load();
   }, [load, reloadKey]);
 
+  const goHome = useCallback(async () => {
+    if (homeDir) {
+      setRoot(homeDir);
+      return;
+    }
+    // Never had a successful load — ask the API for the home dir directly.
+    try {
+      const res = await fetch("/api/fs-tree");
+      const d = (await res.json()) as DirData;
+      if (d?.home) setRoot(d.home);
+    } catch {
+      /* ignore */
+    }
+  }, [homeDir]);
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Root path bar */}
       <div className="mb-1.5 flex items-center gap-1 px-1">
         <button
-          onClick={() => setRoot(data?.home || root)}
+          onClick={goHome}
           title="Home"
           className="rounded p-1 text-[color:var(--fg-faint)] hover:text-[color:var(--accent)]"
         >
@@ -289,13 +316,18 @@ export function FileTree({
 
       {/* Tree */}
       <div className="min-h-0 flex-1 overflow-auto pr-1">
-        {!data ? (
+        {error ? (
+          <div className="px-2 py-4 text-[11px] leading-relaxed text-[color:var(--warning)]">
+            {error}
+            <div className="mt-1 text-[color:var(--fg-faint)]">Use the Home button to jump back.</div>
+          </div>
+        ) : !data ? (
           <div className="px-2 py-4 text-[11px] text-[color:var(--fg-faint)]">Loading…</div>
         ) : (
           data.entries.map((e) =>
             e.isDir ? (
               <Node
-                key={e.name}
+                key={`${root}/${e.name}`}
                 path={`${root}/${e.name}`}
                 name={e.name}
                 depth={0}
@@ -308,7 +340,7 @@ export function FileTree({
               />
             ) : (
               <FileRow
-                key={e.name}
+                key={`${root}/${e.name}`}
                 path={`${root}/${e.name}`}
                 name={e.name}
                 indent={17}

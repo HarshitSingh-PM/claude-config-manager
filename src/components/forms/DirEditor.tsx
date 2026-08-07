@@ -259,7 +259,11 @@ export function DirEditor({
                 initial={{ opacity: 0, x: -4 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setActive(f)}
+                onClick={() => {
+                  if (f === active) return;
+                  if (dirty && !window.confirm("Discard unsaved changes to the current file?")) return;
+                  setActive(f);
+                }}
                 className={`w-full text-left px-2 py-1.5 rounded text-xs font-mono transition flex items-center gap-1.5 ${
                   active === f
                     ? "bg-[color:var(--accent-soft)] text-[color:var(--accent)]"

@@ -23,6 +23,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const encoder = new TextEncoder();
   let unsubscribe: (() => void) | null = null;
   let ping: ReturnType<typeof setInterval> | null = null;
+  let ended = false; // set on exit — subscribe() can fire onExit synchronously
 
   const stream = new ReadableStream({
     start(controller) {
@@ -40,6 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         id,
         (chunk) => send("output", JSON.stringify(chunk)),
         (code) => {
+          ended = true;
           send("exit", JSON.stringify({ code }));
           cleanup();
           try {
@@ -49,6 +51,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
           }
         },
       );
+
+      // For an already-exited session subscribe() invokes onExit synchronously,
+      // BEFORE returning — `unsubscribe` is still null inside that call, so the
+      // handler can't clear the (not-yet-created) ping. Check `ended` here.
+      if (ended) return;
 
       if (!unsubscribe) {
         send("exit", JSON.stringify({ code: 0 }));

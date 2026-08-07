@@ -30,18 +30,21 @@ export function ListInput({
     <div className="space-y-2">
       <AnimatePresence initial={false}>
         {values.map((v, i) => (
+          // Key by index, not value: a value-based key remounts the row on
+          // every keystroke (focus loss), and value-matching edits/removals
+          // hit all duplicates at once.
           <motion.div
-            key={v + "_" + i}
+            key={i}
             layout
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.12 }}
           >
-            <Removable onRemove={() => onChange(values.filter((x) => x !== v))}>
+            <Removable onRemove={() => onChange(values.filter((_, j) => j !== i))}>
               <TextInput
                 value={v}
-                onChange={(nv) => onChange(values.map((x) => (x === v ? nv : x)))}
+                onChange={(nv) => onChange(values.map((x, j) => (j === i ? nv : x)))}
                 monospaced
               />
             </Removable>

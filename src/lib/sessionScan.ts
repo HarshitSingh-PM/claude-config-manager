@@ -50,6 +50,9 @@ const scanCache = new Map<string, { key: string; data: SessionScan }>();
 // the changed multi-MB file. Within the TTL they all share one scan.
 const SCAN_TTL_MS = 5000;
 let lastScan: { at: number; result: ScannedSession[] } | null = null;
+// Dashboard / sessions / projects fire in parallel on page load — share one
+// in-flight scan instead of each walking the tree before the TTL is set.
+let inflightScan: Promise<ScannedSession[]> | null = null;
 
 function looksLikeNoise(text: string): boolean {
   const t = text.trimStart();
@@ -142,6 +145,14 @@ async function scanSession(filePath: string, home: string): Promise<SessionScan>
 
 export async function scanAllSessions(): Promise<ScannedSession[]> {
   if (lastScan && Date.now() - lastScan.at < SCAN_TTL_MS) return lastScan.result;
+  if (inflightScan) return inflightScan;
+  inflightScan = doScan().finally(() => {
+    inflightScan = null;
+  });
+  return inflightScan;
+}
+
+async function doScan(): Promise<ScannedSession[]> {
   const home = os.homedir();
   const root = sessionsRoot();
   let dirs: string[] = [];

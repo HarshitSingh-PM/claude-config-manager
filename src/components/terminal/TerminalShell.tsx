@@ -67,6 +67,9 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
   const [showHistory, setShowHistory] = useState(false);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   const didInit = useRef(false);
+  // Set only AFTER the async restore finishes — the persist effect must not
+  // write until then, or it clobbers the saved layout before it's been read.
+  const restoreDone = useRef(false);
 
   const workspaceDir = newCwd || projectDir || homeDir;
 
@@ -175,12 +178,17 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
     [focusedSessionId, sendToFocused],
   );
 
+  // Bumped by create/close so an in-flight poll that started BEFORE the
+  // mutation can't land after it and revert the optimistic session list.
+  const sessionsGen = useRef(0);
+
   const refreshSessions = useCallback(async (): Promise<SessionMeta[]> => {
+    const gen = sessionsGen.current;
     const res = await fetch("/api/terminal");
     const data = await res.json();
     setAvailable(Boolean(data.available));
     setPtyError(data.error ?? null);
-    setSessions(data.sessions ?? []);
+    if (gen === sessionsGen.current) setSessions(data.sessions ?? []);
     return (data.sessions ?? []) as SessionMeta[];
   }, []);
 
@@ -198,6 +206,7 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
         return;
       }
       const { session } = (await res.json()) as { session: SessionMeta };
+      sessionsGen.current++;
       setSessions((prev) => [...prev, session]);
       setPanes((prev) => {
         const next = [...prev];
@@ -212,6 +221,7 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
 
   const closeSession = useCallback(async (id: string) => {
     await fetch(`/api/terminal/${id}`, { method: "DELETE" }).catch(() => {});
+    sessionsGen.current++;
     setSessions((prev) => prev.filter((s) => s.id !== id));
     setPanes((prev) => prev.map((p) => (p === id ? null : p)));
   }, []);
@@ -255,13 +265,14 @@ export default function TerminalShell({ projectDir }: { projectDir: string }) {
         // Fresh start — spawn one shell in the workspace.
         createSession("shell");
       }
+      restoreDone.current = true;
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist layout + pane assignment.
   useEffect(() => {
-    if (!didInit.current) return;
+    if (!restoreDone.current) return;
     try {
       localStorage.setItem(LS_KEY, JSON.stringify({ layout, panes }));
     } catch {

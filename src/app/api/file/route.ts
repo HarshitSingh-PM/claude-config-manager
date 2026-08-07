@@ -12,15 +12,17 @@ function isSafeAbs(p: string): boolean {
 }
 
 function isWithinAllowed(p: string): boolean {
-  const home = os.homedir();
+  // Resolve first — otherwise `..` segments escape every root, and a bare
+  // startsWith admits sibling dirs that share a root's prefix.
+  const r = path.resolve(p);
   const allowed = [
-    home,
+    os.homedir(),
     process.cwd(),
     "/Library/Application Support/ClaudeCode",
     "/etc/claude-code",
     "C:\\Program Files\\ClaudeCode",
-  ];
-  return allowed.some((root) => p === root || p.startsWith(root + path.sep) || p.startsWith(root));
+  ].map((root) => path.resolve(root));
+  return allowed.some((root) => r === root || r.startsWith(root + path.sep));
 }
 
 export async function GET(req: Request) {

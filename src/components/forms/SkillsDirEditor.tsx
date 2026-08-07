@@ -227,7 +227,11 @@ export function SkillsDirEditor({
                 initial={{ opacity: 0, x: -4 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setActive(s.name)}
+                onClick={() => {
+                  if (s.name === active) return;
+                  if (dirty && !window.confirm("Discard unsaved changes to the current skill?")) return;
+                  setActive(s.name);
+                }}
                 className={`w-full text-left px-2 py-1.5 rounded text-xs transition flex items-center gap-1.5 ${
                   active === s.name
                     ? "bg-[color:var(--accent-soft)] text-[color:var(--accent)]"

@@ -15,7 +15,7 @@ export function ClaudeMdForm({
 }) {
   const lineCount = body.split("\n").length;
   const charCount = body.length;
-  const tooLong = lineCount > 250;
+  const tooLong = lineCount > 200;
 
   const appendSection = (text: string) => {
     const trimmed = body.trimEnd();

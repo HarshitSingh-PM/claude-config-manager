@@ -164,16 +164,27 @@ async function mutateScope(
   await writeJsonBackup(userClaudeJson(), cj);
 }
 
+// Read-only counterpart of mutateScope — never writes. (Reading via
+// mutateScope would rewrite ~/.claude.json / .mcp.json as a side effect,
+// racing the live Claude Code process that owns those files.)
+async function readScope(scope: Scope, projectDir: string): Promise<Record<string, ServerConfig>> {
+  if (scope === "project") {
+    const pj = (await readJson(path.join(projectDir, ".mcp.json"))) ?? {};
+    return (pj.mcpServers as Record<string, ServerConfig>) ?? {};
+  }
+  const cj = (await readJson(userClaudeJson())) ?? {};
+  if (scope === "user") return (cj.mcpServers as Record<string, ServerConfig>) ?? {};
+  const projects = (cj.projects as Record<string, { mcpServers?: Record<string, ServerConfig> }>) ?? {};
+  return projects[projectDir]?.mcpServers ?? {};
+}
+
 async function getServerConfig(
   scope: Scope,
   projectDir: string,
   name: string,
 ): Promise<ServerConfig | null> {
-  let found: ServerConfig | null = null;
-  await mutateScope(scope, projectDir, (servers) => {
-    found = servers[name] ?? null;
-  });
-  return found;
+  const servers = await readScope(scope, projectDir);
+  return servers[name] ?? null;
 }
 
 export async function POST(req: Request) {
@@ -188,8 +199,19 @@ export async function POST(req: Request) {
   const { action, scope, name } = body;
   const projectDir = body.projectDir ?? "";
   if (!name) return NextResponse.json({ error: "name required" }, { status: 400 });
-  if ((scope === "project" || scope === "local") && !projectDir)
-    return NextResponse.json({ error: "projectDir required for this scope" }, { status: 400 });
+  if (scope === "project" || scope === "local") {
+    // projectDir becomes a write target (<dir>/.mcp.json) — insist it is a
+    // real, existing directory inside the user's home tree.
+    if (!projectDir || !path.isAbsolute(projectDir))
+      return NextResponse.json({ error: "projectDir (absolute) required for this scope" }, { status: 400 });
+    const resolved = path.resolve(projectDir);
+    const home = path.resolve(os.homedir());
+    if (resolved !== home && !resolved.startsWith(home + path.sep))
+      return NextResponse.json({ error: "projectDir must be inside your home directory" }, { status: 403 });
+    const st = await fs.stat(resolved).catch(() => null);
+    if (!st?.isDirectory())
+      return NextResponse.json({ error: `projectDir is not a directory: ${projectDir}` }, { status: 400 });
+  }
 
   try {
     switch (action) {

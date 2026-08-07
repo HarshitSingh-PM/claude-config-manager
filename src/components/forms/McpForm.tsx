@@ -15,6 +15,9 @@ type ServerEntry = {
   headers?: Record<string, string>;
   env?: Record<string, string>;
   alwaysLoad?: boolean;
+  /** The original on-disk entry — preserved so keys this form doesn't model
+   *  (cwd, timeout, disabled, …) survive an edit. */
+  raw?: Record<string, unknown>;
 };
 
 function fromObject(obj: Record<string, unknown>): ServerEntry[] {
@@ -28,26 +31,33 @@ function fromObject(obj: Record<string, unknown>): ServerEntry[] {
     headers: v.headers as Record<string, string> | undefined,
     env: v.env as Record<string, string> | undefined,
     alwaysLoad: v.alwaysLoad as boolean | undefined,
+    raw: v,
   }));
 }
 
-function toObject(servers: ServerEntry[]): Record<string, unknown> {
+// `original` is the full previous file object — top-level keys we don't model
+// ($schema, …) ride along, as do unmodelled per-server keys via `raw`. Fields
+// the form DOES own are written from current form state (or removed when the
+// user cleared them), regardless of the selected transport, so switching
+// transport back and forth never destroys the other transport's config.
+function toObject(servers: ServerEntry[], original: Record<string, unknown>): Record<string, unknown> {
   const mcpServers: Record<string, Record<string, unknown>> = {};
   for (const s of servers) {
     if (!s.name.trim()) continue;
-    const entry: Record<string, unknown> = { type: s.type };
-    if (s.type === "stdio") {
-      if (s.command) entry.command = s.command;
-      if (s.args?.length) entry.args = s.args;
-    } else {
-      if (s.url) entry.url = s.url;
-      if (s.headers && Object.keys(s.headers).length) entry.headers = s.headers;
-    }
-    if (s.env && Object.keys(s.env).length) entry.env = s.env;
-    if (s.alwaysLoad) entry.alwaysLoad = true;
+    const entry: Record<string, unknown> = { ...(s.raw ?? {}), type: s.type };
+    const put = (k: string, v: unknown, keep: boolean) => {
+      if (keep) entry[k] = v;
+      else delete entry[k];
+    };
+    put("command", s.command, Boolean(s.command));
+    put("args", s.args, Boolean(s.args?.length));
+    put("url", s.url, Boolean(s.url));
+    put("headers", s.headers, Boolean(s.headers && Object.keys(s.headers).length));
+    put("env", s.env, Boolean(s.env && Object.keys(s.env).length));
+    put("alwaysLoad", true, Boolean(s.alwaysLoad));
     mcpServers[s.name] = entry;
   }
-  return { mcpServers };
+  return { ...original, mcpServers };
 }
 
 export function McpForm({
@@ -60,11 +70,6 @@ export function McpForm({
   const servers = fromObject(values);
   const [expanded, setExpanded] = useState<string | null>(servers[0]?.name ?? null);
 
-  const updateServer = (name: string, patch: Partial<ServerEntry>) => {
-    const next = servers.map((s) => (s.name === name ? { ...s, ...patch } : s));
-    onChange(toObject(next));
-  };
-
   const addServer = () => {
     const base = "server";
     let i = 1;
@@ -74,12 +79,12 @@ export function McpForm({
       name = `${base}-${i}`;
     }
     const next = [...servers, { name, type: "stdio" } as ServerEntry];
-    onChange(toObject(next));
+    onChange(toObject(next, values));
     setExpanded(name);
   };
 
   const removeServer = (name: string) => {
-    onChange(toObject(servers.filter((s) => s.name !== name)));
+    onChange(toObject(servers.filter((s) => s.name !== name), values));
   };
 
   return (
@@ -115,16 +120,19 @@ export function McpForm({
                 exit={{ opacity: 0, y: -4 }}
                 className="border border-[color:var(--border)] rounded-lg overflow-hidden"
               >
-                <button
-                  className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-[color:var(--bg-elev-2)] transition"
-                  onClick={() => setExpanded(open ? null : s.name)}
-                >
-                  <div className="flex items-center gap-2">
+                {/* header is a div with a nested toggle button — a <button>
+                    wrapping the remove IconButton is invalid HTML and made
+                    the delete click also toggle/expand the panel */}
+                <div className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-[color:var(--bg-elev-2)] transition">
+                  <button
+                    className="flex-1 flex items-center gap-2 text-left"
+                    onClick={() => setExpanded(open ? null : s.name)}
+                  >
                     <span className="font-mono text-[12.5px] text-[color:var(--fg)]">{s.name}</span>
                     <span className="text-[10px] uppercase tracking-wide text-[color:var(--fg-faint)] border border-[color:var(--border)] px-1.5 py-0.5 rounded">
                       {s.type}
                     </span>
-                  </div>
+                  </button>
                   <IconButton
                     label="Remove"
                     variant="danger"
@@ -132,7 +140,7 @@ export function McpForm({
                   >
                     <Trash2 size={13} />
                   </IconButton>
-                </button>
+                </div>
                 <AnimatePresence>
                   {open && (
                     <motion.div
@@ -148,22 +156,25 @@ export function McpForm({
                             field={f}
                             values={s as unknown as Record<string, unknown>}
                             onChange={(nv) => {
-                              const patch: Partial<ServerEntry> = {};
-                              for (const k of Object.keys(nv)) {
-                                if ((nv as Record<string, unknown>)[k] !== (s as unknown as Record<string, unknown>)[k]) {
-                                  (patch as Record<string, unknown>)[k] = (nv as Record<string, unknown>)[k];
-                                }
-                              }
-                              // Renaming server requires special handling
-                              if (patch.name && patch.name !== s.name) {
-                                const next = servers.map((x) =>
-                                  x.name === s.name ? ({ ...x, ...patch } as ServerEntry) : x,
-                                );
-                                onChange(toObject(next));
-                                setExpanded(patch.name as string);
-                              } else {
-                                updateServer(s.name, patch);
-                              }
+                              // Build the entry from the form values directly —
+                              // a key ABSENT from nv means the user cleared it,
+                              // which a diff-based patch could never express.
+                              const rec = nv as Record<string, unknown>;
+                              const newName = String(rec.name ?? s.name).trim() || s.name;
+                              const updated: ServerEntry = {
+                                name: newName,
+                                type: ((rec.type as ServerEntry["type"]) ?? "stdio"),
+                                command: rec.command as string | undefined,
+                                args: rec.args as string[] | undefined,
+                                url: rec.url as string | undefined,
+                                headers: rec.headers as Record<string, string> | undefined,
+                                env: rec.env as Record<string, string> | undefined,
+                                alwaysLoad: rec.alwaysLoad as boolean | undefined,
+                                raw: s.raw,
+                              };
+                              const next = servers.map((x) => (x.name === s.name ? updated : x));
+                              onChange(toObject(next, values));
+                              if (newName !== s.name) setExpanded(newName);
                             }}
                           />
                         ))}

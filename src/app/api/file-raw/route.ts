@@ -24,8 +24,10 @@ const MIME: Record<string, string> = {
 };
 
 function isWithinHome(p: string): boolean {
-  const home = os.homedir();
-  return p === home || p.startsWith(home + path.sep);
+  // Resolve first so `..` segments can't escape the home tree.
+  const home = path.resolve(os.homedir());
+  const r = path.resolve(p);
+  return r === home || r.startsWith(home + path.sep);
 }
 
 export async function GET(req: Request) {

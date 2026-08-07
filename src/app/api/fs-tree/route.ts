@@ -10,8 +10,10 @@ export const runtime = "nodejs";
 // expands folders lazily, one request per folder, so we never walk the whole
 // tree. Reads are confined to the user's home tree (same spirit as /api/file).
 function isWithinHome(p: string): boolean {
-  const home = os.homedir();
-  return p === home || p.startsWith(home + path.sep);
+  // Resolve first so `..` segments can't escape the home tree.
+  const home = path.resolve(os.homedir());
+  const r = path.resolve(p);
+  return r === home || r.startsWith(home + path.sep);
 }
 
 export async function GET(req: Request) {

@@ -108,5 +108,9 @@ function printHeader(port) {
   };
   process.on("SIGINT", () => shutdown("SIGINT"));
   process.on("SIGTERM", () => shutdown("SIGTERM"));
+  child.on("error", (err) => {
+    console.error(`\n  Could not start the server process: ${err.message}\n`);
+    process.exit(1);
+  });
   child.on("exit", (code) => process.exit(code ?? 0));
 })();
