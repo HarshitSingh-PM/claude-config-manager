@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import os from "node:os";
 import { getOrchestrator, claudeAvailable, resolveClaudeBin } from "@/lib/orchestrator/runtime";
+import { getCrewEngine, fullSnapshot } from "@/lib/orchestrator/crews";
 import { listAgents, listSkills } from "@/lib/orchestrator/agents";
 import { TEAM_TEMPLATES, buildOrchestratedPrompt, buildParallelPrompt } from "@/lib/orchestrator/teams";
 import { type PermMode, type TeamMode, type TeamRole, type Run } from "@/lib/orchestrator/types";
 
 export const dynamic = "force-dynamic";
 
-const PERM_MODES: PermMode[] = ["plan", "acceptEdits", "auto", "bypassPermissions"];
+const PERM_MODES: PermMode[] = ["plan", "acceptEdits", "auto", "dontAsk", "bypassPermissions"];
 const normPerm = (p: unknown): PermMode => (PERM_MODES.includes(p as PermMode) ? (p as PermMode) : "acceptEdits");
 
 // GET → full snapshot: live runs + history + aggregate metrics, plus the
@@ -16,10 +17,9 @@ const normPerm = (p: unknown): PermMode => (PERM_MODES.includes(p as PermMode) ?
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const projectDir = url.searchParams.get("projectDir") || "";
-  const orch = getOrchestrator();
   const [agents, skills] = await Promise.all([listAgents(projectDir || undefined), listSkills(projectDir || undefined)]);
   return NextResponse.json({
-    ...orch.snapshot(),
+    ...fullSnapshot(),
     agents,
     skills,
     teamTemplates: TEAM_TEMPLATES,
@@ -42,7 +42,14 @@ export async function POST(req: Request) {
       | "campaignCreate"
       | "campaignRunSession"
       | "campaignUpdate"
-      | "campaignDelete";
+      | "campaignDelete"
+      | "crewSave"
+      | "crewDelete"
+      | "crewDuplicate"
+      | "crewLaunch"
+      | "crewRunStop"
+      | "crewRunRemove"
+      | "crewRunsClear";
     id?: string;
     agentName?: string;
     agentLabel?: string;
@@ -64,6 +71,9 @@ export async function POST(req: Request) {
     plan?: string;
     instruction?: string;
     patch?: Record<string, unknown>;
+    // crews
+    crew?: Record<string, unknown>;
+    inputValues?: Record<string, string>;
   };
   const orch = getOrchestrator();
 
@@ -200,6 +210,40 @@ export async function POST(req: Request) {
         if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
         return NextResponse.json({ ok: orch.deleteCampaign(body.id) });
       }
+      case "crewSave": {
+        const res = getCrewEngine().saveCrew((body.crew || {}) as Record<string, unknown>);
+        if (res.error) return NextResponse.json({ error: res.error }, { status: 400 });
+        return NextResponse.json({ ok: true, crew: res.crew });
+      }
+      case "crewDelete": {
+        if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        return NextResponse.json({ ok: getCrewEngine().deleteCrew(body.id) });
+      }
+      case "crewDuplicate": {
+        if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        const crew = getCrewEngine().duplicateCrew(body.id);
+        if (!crew) return NextResponse.json({ error: "crew not found" }, { status: 404 });
+        return NextResponse.json({ ok: true, crew });
+      }
+      case "crewLaunch": {
+        if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        if (!claudeAvailable()) return NextResponse.json({ error: "the `claude` CLI was not found." }, { status: 400 });
+        const cwd = (body.cwd || "").trim();
+        if (cwd && !path_isDir(cwd)) return NextResponse.json({ error: `cwd is not a directory: ${cwd}` }, { status: 400 });
+        const res = getCrewEngine().launchCrew(body.id, body.inputValues || {}, cwd || undefined);
+        if (res.error) return NextResponse.json({ error: res.error }, { status: 400 });
+        return NextResponse.json({ ok: true, crewRun: res.crewRun });
+      }
+      case "crewRunStop": {
+        if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        return NextResponse.json({ ok: getCrewEngine().stopCrewRun(body.id) });
+      }
+      case "crewRunRemove": {
+        if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+        return NextResponse.json({ ok: getCrewEngine().removeCrewRun(body.id) });
+      }
+      case "crewRunsClear":
+        return NextResponse.json({ ok: true, removed: getCrewEngine().clearFinishedCrewRuns() });
       case "stop": {
         if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
         return NextResponse.json({ ok: orch.stop(body.id) });

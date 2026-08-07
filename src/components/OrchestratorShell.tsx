@@ -35,8 +35,10 @@ import {
   Play,
   Pause,
   CheckCircle2,
+  Workflow,
 } from "lucide-react";
 import { Card, TextInput, Textarea, Select, Badge } from "./primitives";
+import { CrewsView } from "./CrewsView";
 import { Tooltip, InfoIcon } from "./Tooltip";
 import { cn } from "@/lib/utils";
 import type {
@@ -51,7 +53,6 @@ import type {
   LiveSession,
   LiveSessionsResponse,
   TeamTemplate,
-  TeamRole,
   TeamMode,
   Campaign,
 } from "@/lib/orchestrator/types";
@@ -70,7 +71,7 @@ const EMPTY_AGG: AggregateMetrics = {
   topTools: [],
   topSkills: [],
 };
-const EMPTY_SNAPSHOT: LiveSnapshot = { runs: [], history: [], metrics: EMPTY_AGG, campaigns: [] };
+const EMPTY_SNAPSHOT: LiveSnapshot = { runs: [], history: [], metrics: EMPTY_AGG, campaigns: [], crews: [], crewRuns: [] };
 
 interface Meta {
   agents: AgentDef[];
@@ -82,16 +83,17 @@ interface Meta {
 }
 
 const MODELS = [
-  { value: "sonnet", label: "Sonnet — fast, balanced (recommended)" },
-  { value: "opus", label: "Opus — most capable" },
-  { value: "haiku", label: "Haiku — cheapest, quick" },
-  { value: "fable", label: "Fable" },
+  { value: "sonnet", label: "Sonnet 5 — fast, balanced (recommended)" },
+  { value: "opus", label: "Opus 5 — most capable everyday model" },
+  { value: "haiku", label: "Haiku 4.5 — cheapest, quick" },
+  { value: "fable", label: "Fable 5 — highest capability, premium cost" },
 ];
 
 const PERM_MODES: { value: PermMode; label: string; tone: "success" | "warning" | "danger" | "accent" }[] = [
   { value: "acceptEdits", label: "Accept edits — runs tools & writes files (recommended)", tone: "accent" },
   { value: "plan", label: "Plan only — explores & proposes, no changes (safe)", tone: "success" },
   { value: "auto", label: "Auto — the model decides per tool call", tone: "warning" },
+  { value: "dontAsk", label: "Don't ask — never prompts, denies risky actions", tone: "warning" },
   { value: "bypassPermissions", label: "Full auto — skips ALL permission checks", tone: "danger" },
 ];
 
@@ -113,7 +115,14 @@ function useOrchestrator(projectDir: string) {
         claudeBin: d.claudeBin,
         defaults: d.defaults,
       });
-      setLive({ runs: d.runs ?? [], history: d.history ?? [], metrics: d.metrics ?? EMPTY_AGG, campaigns: d.campaigns ?? [] });
+      setLive({
+        runs: d.runs ?? [],
+        history: d.history ?? [],
+        metrics: d.metrics ?? EMPTY_AGG,
+        campaigns: d.campaigns ?? [],
+        crews: d.crews ?? [],
+        crewRuns: d.crewRuns ?? [],
+      });
     } catch {
       /* ignore */
     }
@@ -134,7 +143,15 @@ function useOrchestrator(projectDir: string) {
         try {
           const r = await fetch(`/api/orchestrator?projectDir=${encodeURIComponent(projectDir)}`);
           const d = await r.json();
-          if (!stopped) setLive({ runs: d.runs ?? [], history: d.history ?? [], metrics: d.metrics ?? EMPTY_AGG, campaigns: d.campaigns ?? [] });
+          if (!stopped)
+            setLive({
+              runs: d.runs ?? [],
+              history: d.history ?? [],
+              metrics: d.metrics ?? EMPTY_AGG,
+              campaigns: d.campaigns ?? [],
+              crews: d.crews ?? [],
+              crewRuns: d.crewRuns ?? [],
+            });
         } catch {
           /* ignore */
         }
@@ -534,339 +551,6 @@ function RunCard({
         </div>
       </Card>
     </motion.div>
-  );
-}
-
-// ─── launch panel (single agent OR a team) ──────────────────────────
-function LaunchPanel({
-  meta,
-  projectDir,
-  post,
-}: {
-  meta: Meta;
-  projectDir: string;
-  post: (body: Record<string, unknown>) => Promise<{ error?: string }>;
-}) {
-  const [kind, setKind] = useState<"single" | "team">("single");
-  // shared
-  const [model, setModel] = useState(meta.defaults?.model || "sonnet");
-  const [permissionMode, setPermissionMode] = useState<PermMode>(meta.defaults?.permissionMode || "acceptEdits");
-  const [cwd, setCwd] = useState(meta.defaults?.cwd || projectDir || "");
-  const [maxTurns, setMaxTurns] = useState("30");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  // single
-  const [agentName, setAgentName] = useState("general");
-  const [task, setTask] = useState("");
-  // team
-  const [templateId, setTemplateId] = useState(meta.teamTemplates[0]?.id ?? "custom");
-  const [teamName, setTeamName] = useState(meta.teamTemplates[0]?.name ?? "Team");
-  const [teamMode, setTeamMode] = useState<TeamMode>(meta.teamTemplates[0]?.mode ?? "orchestrated");
-  const [objective, setObjective] = useState("");
-  const [roles, setRoles] = useState<TeamRole[]>(meta.teamTemplates[0]?.roles?.map((r) => ({ ...r })) ?? []);
-
-  const agentOptions = useMemo(
-    () => [
-      { value: "general", label: "General agent (no specialization)" },
-      ...meta.agents.map((a) => ({ value: a.name, label: `${a.name}${a.source === "project" ? " (project)" : ""}` })),
-    ],
-    [meta.agents],
-  );
-  const selectedAgent = meta.agents.find((a) => a.name === agentName);
-  const permTone = PERM_MODES.find((p) => p.value === permissionMode)?.tone ?? "accent";
-  const maxTurnsNum = () => Number(maxTurns) || undefined;
-
-  const applyTemplate = (id: string) => {
-    setTemplateId(id);
-    if (id === "custom") {
-      setRoles([
-        { role: "Role 1", agentName: "general", responsibility: "" },
-        { role: "Role 2", agentName: "general", responsibility: "" },
-      ]);
-      return;
-    }
-    const t = meta.teamTemplates.find((x) => x.id === id);
-    if (t) {
-      setRoles(t.roles.map((r) => ({ ...r })));
-      setTeamMode(t.mode);
-      setTeamName(t.name);
-    }
-  };
-  const updateRole = (i: number, patch: Partial<TeamRole>) =>
-    setRoles((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-
-  const launchSingle = async () => {
-    if (!task.trim() || busy) return;
-    setBusy(true);
-    setErr(null);
-    const res = await post({
-      action: "launch",
-      agentName,
-      agentLabel: agentName === "general" ? "General agent" : selectedAgent?.name,
-      model,
-      task: task.trim(),
-      cwd: cwd.trim() || undefined,
-      permissionMode,
-      maxTurns: maxTurnsNum(),
-    });
-    setBusy(false);
-    if (res?.error) setErr(res.error);
-    else setTask("");
-  };
-
-  const launchTeam = async () => {
-    if (!objective.trim() || busy) return;
-    setBusy(true);
-    setErr(null);
-    const res = await post({
-      action: "launchTeam",
-      teamName: teamName.trim() || "Team",
-      teamMode,
-      objective: objective.trim(),
-      roles: roles.filter((r) => r.responsibility.trim()),
-      model,
-      cwd: cwd.trim() || undefined,
-      permissionMode,
-      maxTurns: maxTurnsNum(),
-    });
-    setBusy(false);
-    if (res?.error) setErr(res.error);
-    else setObjective("");
-  };
-
-  return (
-    <Card className="p-4 space-y-3.5 lg:sticky lg:top-[84px]">
-      <div className="flex items-center gap-2">
-        <Rocket size={15} className="text-[color:var(--accent)]" />
-        <h3 className="text-sm font-medium">Launch</h3>
-      </div>
-
-      {/* single / team toggle */}
-      <div className="grid grid-cols-2 gap-1 bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-lg p-0.5">
-        {(["single", "team"] as const).map((k) => (
-          <button
-            key={k}
-            onClick={() => setKind(k)}
-            className={cn(
-              "h-7 rounded-md text-xs font-medium inline-flex items-center justify-center gap-1.5 transition",
-              kind === k ? "bg-[color:var(--accent)] text-[color:var(--accent-ink)]" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]",
-            )}
-          >
-            {k === "single" ? <Bot size={12} /> : <Users size={12} />}
-            {k === "single" ? "Single agent" : "Team"}
-          </button>
-        ))}
-      </div>
-
-      {kind === "single" ? (
-        <>
-          <div>
-            <label className="text-[11px] font-medium text-[color:var(--fg-muted)] flex items-center gap-1 mb-1">
-              Agent
-              <InfoIcon
-                content="The general agent runs your task directly. Picking one of your subagent definitions delegates the task to it via the Task tool."
-                significance="Subagent definitions come from ~/.claude/agents and the project's .claude/agents."
-              />
-            </label>
-            <Select value={agentName} onChange={setAgentName} options={agentOptions} />
-            {selectedAgent?.description && (
-              <p className="text-[10.5px] text-[color:var(--fg-faint)] mt-1 line-clamp-2 leading-relaxed">
-                {selectedAgent.description}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="text-[11px] font-medium text-[color:var(--fg-muted)] mb-1 block">Task</label>
-            <Textarea
-              value={task}
-              onChange={setTask}
-              rows={5}
-              monospaced={false}
-              placeholder="e.g. Audit the auth flow in src/ for security issues and write up findings."
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <div>
-            <label className="text-[11px] font-medium text-[color:var(--fg-muted)] flex items-center gap-1 mb-1">
-              Team template
-              <InfoIcon
-                content="A starting set of roles. Orchestrated = one lead agent delegates to the roles (one card, hierarchy). Parallel = one agent per role, side by side."
-                significance="Edit the roles freely, or pick Custom to start blank."
-              />
-            </label>
-            <Select
-              value={templateId}
-              onChange={applyTemplate}
-              options={[
-                ...meta.teamTemplates.map((t) => ({ value: t.id, label: t.name })),
-                { value: "custom", label: "Custom team" },
-              ]}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div>
-              <label className="text-[11px] font-medium text-[color:var(--fg-muted)] mb-1 block">Team name</label>
-              <TextInput value={teamName} onChange={setTeamName} placeholder="Build squad" />
-            </div>
-            <div>
-              <label className="text-[11px] font-medium text-[color:var(--fg-muted)] mb-1 block">Mode</label>
-              <div className="grid grid-cols-2 gap-1 bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-md p-0.5 h-[34px]">
-                {(["orchestrated", "parallel"] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setTeamMode(m)}
-                    className={cn(
-                      "rounded text-[10.5px] font-medium transition",
-                      teamMode === m ? "bg-[color:var(--accent)] text-[color:var(--accent-ink)]" : "text-[color:var(--fg-muted)] hover:text-[color:var(--fg)]",
-                    )}
-                  >
-                    {m === "orchestrated" ? "Lead" : "Parallel"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-medium text-[color:var(--fg-muted)] mb-1 block">Objective (shared)</label>
-            <Textarea
-              value={objective}
-              onChange={setObjective}
-              rows={3}
-              monospaced={false}
-              placeholder="e.g. Add Stripe billing end to end: schema, API, checkout UI, and tests."
-            />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-medium text-[color:var(--fg-muted)]">Roles ({roles.length})</label>
-              <button
-                onClick={() => setRoles((rs) => [...rs, { role: `Role ${rs.length + 1}`, agentName: "general", responsibility: "" }])}
-                className="text-[11px] text-[color:var(--accent)] hover:underline inline-flex items-center gap-1"
-              >
-                <Plus size={11} /> Add role
-              </button>
-            </div>
-            <div className="space-y-2">
-              {roles.map((r, i) => (
-                <div key={i} className="rounded-md border border-[color:var(--border)] bg-[color:var(--bg-elev-2)]/40 p-2 space-y-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      value={r.role}
-                      onChange={(e) => updateRole(i, { role: e.target.value })}
-                      placeholder="Role name"
-                      className="flex-1 bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded px-2 py-1 text-[11.5px] font-medium focus:border-[color:var(--accent)] transition"
-                    />
-                    {roles.length > 1 && (
-                      <button
-                        onClick={() => setRoles((rs) => rs.filter((_, j) => j !== i))}
-                        className="text-[color:var(--fg-faint)] hover:text-[color:var(--danger)] transition shrink-0"
-                        aria-label="Remove role"
-                      >
-                        <X size={13} />
-                      </button>
-                    )}
-                  </div>
-                  <Select value={r.agentName} onChange={(v) => updateRole(i, { agentName: v })} options={agentOptions} />
-                  <input
-                    value={r.responsibility}
-                    onChange={(e) => updateRole(i, { responsibility: e.target.value })}
-                    placeholder="Responsibility…"
-                    className="w-full bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded px-2 py-1 text-[11px] focus:border-[color:var(--accent)] transition"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* shared: model / max turns / permission / cwd */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div>
-          <label className="text-[11px] font-medium text-[color:var(--fg-muted)] mb-1 block">Model</label>
-          <Select value={model} onChange={setModel} options={MODELS} />
-        </div>
-        <div>
-          <label className="text-[11px] font-medium text-[color:var(--fg-muted)] mb-1 block">Max turns</label>
-          <TextInput value={maxTurns} onChange={setMaxTurns} placeholder="30" />
-        </div>
-      </div>
-
-      <div>
-        <label className="text-[11px] font-medium text-[color:var(--fg-muted)] flex items-center gap-1 mb-1">
-          Permissions
-          <InfoIcon
-            content="How the headless agent handles tool permissions. It can't answer interactive prompts, so 'default' isn't offered."
-            significance="Plan = read-only & safe. Accept edits = does the work. Full auto skips every check — only for fully trusted tasks."
-          />
-        </label>
-        <Select
-          value={permissionMode}
-          onChange={(v) => setPermissionMode(v as PermMode)}
-          options={PERM_MODES.map((p) => ({ value: p.value, label: p.label }))}
-        />
-        {permissionMode === "bypassPermissions" && (
-          <p className="text-[10.5px] text-[color:var(--danger)] mt-1 flex items-start gap-1 leading-relaxed">
-            <AlertTriangle size={11} className="mt-0.5 shrink-0" />
-            Skips every permission check — the agent can run any command and edit any file under the
-            working directory. Use only for tasks you fully trust.
-          </p>
-        )}
-      </div>
-
-      <div>
-        <label className="text-[11px] font-medium text-[color:var(--fg-muted)] mb-1 block">Working directory</label>
-        <TextInput value={cwd} onChange={setCwd} placeholder="/absolute/path" monospaced />
-      </div>
-
-      {err && (
-        <div className="text-[11px] text-[color:var(--danger)] flex items-start gap-1.5 leading-relaxed">
-          <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-          {err}
-        </div>
-      )}
-
-      {kind === "single" ? (
-        <button
-          onClick={launchSingle}
-          disabled={!task.trim() || busy || !meta.claudeAvailable}
-          className={cn(
-            "w-full inline-flex items-center justify-center gap-2 h-9 rounded-md text-sm font-medium transition",
-            "bg-[color:var(--accent)] text-[color:var(--accent-ink)] hover:bg-[color:var(--accent-2)]",
-            "disabled:opacity-40 disabled:cursor-not-allowed",
-          )}
-        >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Rocket size={14} />}
-          {busy ? "Launching…" : "Launch agent"}
-        </button>
-      ) : (
-        <button
-          onClick={launchTeam}
-          disabled={!objective.trim() || busy || !meta.claudeAvailable || roles.filter((r) => r.responsibility.trim()).length === 0}
-          className={cn(
-            "w-full inline-flex items-center justify-center gap-2 h-9 rounded-md text-sm font-medium transition",
-            "bg-[color:var(--accent)] text-[color:var(--accent-ink)] hover:bg-[color:var(--accent-2)]",
-            "disabled:opacity-40 disabled:cursor-not-allowed",
-          )}
-        >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Users size={14} />}
-          {busy ? "Launching team…" : teamMode === "orchestrated" ? "Launch team (lead delegates)" : `Launch ${roles.filter((r) => r.responsibility.trim()).length} agents`}
-        </button>
-      )}
-      <span
-        className={cn(
-          "block text-center text-[10px]",
-          permTone === "danger" ? "text-[color:var(--danger)]" : "text-[color:var(--fg-faint)]",
-        )}
-      >
-        Runs <code className="font-mono">claude -p</code> · {permissionMode}
-      </span>
-    </Card>
   );
 }
 
@@ -1696,20 +1380,26 @@ function groupRuns(runs: Run[]): { key: string; teamId?: string; teamName?: stri
 export function OrchestratorShell({ projectDir }: { projectDir: string }) {
   const { live, meta, connected, post } = useOrchestrator(projectDir);
   const liveSessions = useLiveSessions();
-  const [tab, setTab] = useState<"board" | "activity" | "metrics" | "campaigns">("board");
+  const [tab, setTab] = useState<"board" | "crews" | "activity" | "metrics" | "campaigns">("crews");
   const [now, setNow] = useState<number>(() => Date.now());
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // tick a live clock while anything is running (drives elapsed timers)
+  const runs = live.runs;
+  const activeCount = runs.filter((r) => r.status === "running").length;
+  const crewActive = live.crewRuns.some((r) => r.status === "running" || r.status === "queued");
+  const anythingRunning = activeCount > 0 || runs.some((r) => r.status === "queued") || crewActive;
+
+  // tick a live clock ONLY while something is running (drives elapsed timers) —
+  // an unconditional interval re-renders the whole shell every second while idle.
   useEffect(() => {
+    if (!anythingRunning) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNow(Date.now());
     tickRef.current = setInterval(() => setNow(Date.now()), 1000);
     return () => {
       if (tickRef.current) clearInterval(tickRef.current);
     };
-  }, []);
-
-  const runs = live.runs;
-  const activeCount = runs.filter((r) => r.status === "running").length;
+  }, [anythingRunning]);
   const liveCost = runs.reduce((a, r) => a + (r.metrics.costUsd || 0), 0);
 
   const onStop = (id: string) => post({ action: "stop", id });
@@ -1717,10 +1407,11 @@ export function OrchestratorShell({ projectDir }: { projectDir: string }) {
   const finishedCount = runs.filter((r) => r.status !== "running" && r.status !== "queued").length;
 
   const TABS: { id: typeof tab; label: string; Icon: typeof Network }[] = [
-    { id: "board", label: "Live board", Icon: Network },
+    { id: "crews", label: "Crews", Icon: Workflow },
     { id: "activity", label: "Skill activity", Icon: Sparkles },
     { id: "metrics", label: "Measurement", Icon: Gauge },
     { id: "campaigns", label: "Campaigns", Icon: ClipboardList },
+    { id: "board", label: "Live board", Icon: Network },
   ];
 
   return (
@@ -1733,10 +1424,10 @@ export function OrchestratorShell({ projectDir }: { projectDir: string }) {
             Agent Orchestrator
           </h2>
           <p className="text-xs text-[color:var(--fg-muted)] mt-1 max-w-2xl leading-relaxed">
-            Launch multiple Claude agents at once, each on its own task, and watch them work live —
-            every tool call, skill, and spawned sub-agent rendered as a hierarchy with running cost
-            and token metrics. The board also shows the claude sessions already running on your
-            machine (terminals, other windows), observed read-only.
+            Build crews — reusable multi-agent pipelines authored entirely in the UI — and run them
+            with one click. Every agent a crew or campaign launches shows up on the live board with
+            its tool calls, skills, and sub-agents rendered as a hierarchy, plus running cost and
+            token metrics.
           </p>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-[color:var(--fg-muted)] shrink-0">
@@ -1769,15 +1460,8 @@ export function OrchestratorShell({ projectDir }: { projectDir: string }) {
         <Kpi label="Success" value={`${Math.round(live.metrics.successRate * 100)}%`} Icon={Check} tone="text-[color:var(--success)]" />
       </div>
 
-      {/* main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 items-start">
-        {meta ? (
-          <LaunchPanel meta={meta} projectDir={projectDir} post={post} />
-        ) : (
-          <Card className="p-6 text-center text-xs text-[color:var(--fg-muted)]">Loading…</Card>
-        )}
-
-        <div className="min-w-0 space-y-4">
+      {/* main content */}
+      <div className="min-w-0 space-y-4">
           {/* tabs */}
           <div className="inline-flex items-center bg-[color:var(--bg-elev-2)] border border-[color:var(--border)] rounded-lg p-0.5 relative">
             {TABS.map(({ id, label, Icon }) => {
@@ -1823,9 +1507,8 @@ export function OrchestratorShell({ projectDir }: { projectDir: string }) {
                     <Network size={28} className="mx-auto text-[color:var(--fg-faint)] mb-3" />
                     <h3 className="text-sm font-medium mb-1.5">No agents launched yet</h3>
                     <p className="text-xs text-[color:var(--fg-muted)] max-w-sm mx-auto leading-relaxed">
-                      Use the panel on the left to launch an agent or a team. Unlike the observed
-                      sessions above, these run as cards you can watch live, expand into a hierarchy,
-                      and stop.
+                      Run a crew (Crews tab) or a campaign and every agent it launches appears here as
+                      a card you can watch live, expand into a hierarchy, and stop.
                     </p>
                   </Card>
                 ) : (
@@ -1868,6 +1551,17 @@ export function OrchestratorShell({ projectDir }: { projectDir: string }) {
             </div>
           )}
 
+          {tab === "crews" && meta && (
+            <CrewsView
+              crews={live.crews}
+              crewRuns={live.crewRuns}
+              installedAgents={meta.agents}
+              defaultCwd={meta.defaults?.cwd || projectDir}
+              now={now}
+              post={post}
+            />
+          )}
+
           {tab === "activity" && <SkillActivityFeed runs={runs} />}
 
           {tab === "metrics" && (
@@ -1881,7 +1575,6 @@ export function OrchestratorShell({ projectDir }: { projectDir: string }) {
           {tab === "campaigns" && meta && (
             <CampaignsView campaigns={live.campaigns} meta={meta} runs={runs} post={post} />
           )}
-        </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ export type RunStatus = "queued" | "running" | "completed" | "failed" | "stopped
 // The headless permission modes we expose. These map 1:1 to `claude -p
 // --permission-mode <mode>`. We deliberately omit "default" (it prompts
 // interactively, which a headless run can't answer → it would hang).
-export type PermMode = "plan" | "acceptEdits" | "auto" | "bypassPermissions";
+export type PermMode = "plan" | "acceptEdits" | "auto" | "dontAsk" | "bypassPermissions";
 
 export type NodeKind = "subagent" | "tool" | "skill" | "mcp" | "todo" | "error";
 export type NodeStatus = "running" | "done" | "error";
@@ -166,12 +166,99 @@ export interface Campaign {
   sessions: CampaignSession[];
 }
 
+// ─── Crews (CrewAI-style pipelines, fully UI-authored) ──────────────
+// A Crew is a saved, reusable pipeline: a set of agents (role/goal/backstory
+// personas) plus an ordered list of tasks. Each task is performed by one agent
+// and can consume the outputs of earlier tasks. Everything is authored in the
+// UI — no code — and a crew can be run ("deployed") any number of times with
+// different input values.
+
+export type CrewProcess = "sequential" | "hierarchical";
+
+export interface CrewAgent {
+  id: string;
+  role: string; // "Senior Research Analyst"
+  goal: string; // what this agent optimizes for
+  backstory: string; // persona/expertise framing
+  model: string; // sonnet | opus | haiku | full model id
+  subagentName?: string; // optionally bind to an installed subagent definition
+  permissionMode: PermMode;
+  maxTurns?: number;
+}
+
+export interface CrewTask {
+  id: string;
+  name: string; // short label shown in the pipeline
+  description: string; // what to do — may reference {input} variables
+  expectedOutput: string; // what "done" looks like
+  agentId: string; // which CrewAgent performs it
+  contextTaskIds: string[]; // earlier tasks whose outputs feed into this one
+}
+
+// A runtime input the run dialog asks the user for; referenced in task
+// descriptions as {name}.
+export interface CrewInputVar {
+  name: string;
+  label: string;
+  placeholder?: string;
+}
+
+export interface Crew {
+  id: string;
+  name: string;
+  description: string;
+  process: CrewProcess;
+  agents: CrewAgent[];
+  tasks: CrewTask[]; // array order IS the execution sequence
+  inputs: CrewInputVar[];
+  cwd: string;
+  maxBudgetUsd?: number;
+  createdAt: number;
+  updatedAt: number;
+  runCount: number;
+  lastRunAt?: number;
+}
+
+export type CrewStepStatus = "pending" | "running" | "completed" | "failed" | "skipped";
+
+export interface CrewStepRun {
+  taskId: string;
+  taskName: string;
+  agentId: string;
+  agentRole: string;
+  runId?: string; // the underlying orchestrator Run id (links to the board)
+  status: CrewStepStatus;
+  startedAt?: number;
+  endedAt?: number;
+  output?: string; // the step's final result text, fed to downstream steps
+  error?: string;
+  costUsd: number;
+}
+
+export interface CrewRun {
+  id: string;
+  crewId: string;
+  crewName: string;
+  process: CrewProcess;
+  status: RunStatus;
+  inputValues: Record<string, string>;
+  cwd: string;
+  steps: CrewStepRun[];
+  createdAt: number;
+  endedAt?: number;
+  totalCostUsd: number;
+  finalOutput?: string;
+  error?: string;
+}
+
 // The live snapshot pushed over SSE and returned by the GET route.
 export interface LiveSnapshot {
   runs: Run[];
   history: HistoryEntry[];
   metrics: AggregateMetrics;
   campaigns: Campaign[];
+  crews: Crew[];
+  crewRuns: CrewRun[];
 }
 
 export interface AgentDef {

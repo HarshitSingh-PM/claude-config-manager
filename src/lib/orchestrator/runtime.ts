@@ -53,15 +53,16 @@ function augmentedPath(): string {
 
 export function resolveClaudeBin(): string | null {
   if (process.env.CLAUDE_BIN && fs.existsSync(process.env.CLAUDE_BIN)) return process.env.CLAUDE_BIN;
-  const names = ["claude"];
-  for (const dir of EXTRA_PATHS) {
-    for (const n of names) {
-      const p = path.join(dir, n);
-      try {
-        if (fs.existsSync(p)) return p;
-      } catch {
-        /* ignore */
-      }
+  // check the common install locations AND every PATH dir (covers custom npm
+  // prefixes, fnm/nvm shims, etc.)
+  const dirs = [...EXTRA_PATHS, ...(process.env.PATH || "").split(path.delimiter)];
+  for (const dir of dirs) {
+    if (!dir) continue;
+    const p = path.join(dir, "claude");
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch {
+      /* ignore */
     }
   }
   return null; // fall back to PATH lookup of "claude" at spawn time
@@ -146,6 +147,7 @@ class Orchestrator {
   // id and repeating that message's usage — so we tally usage once per id.
   private usageSeen = new Map<string, Set<string>>();
   private listeners = new Set<() => void>();
+  private runFinishedListeners = new Set<(run: Run) => void>();
   history: HistoryEntry[] = [];
   campaigns: Campaign[] = [];
   private emitTimer: NodeJS.Timeout | null = null;
@@ -159,6 +161,15 @@ class Orchestrator {
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
+  }
+  // Companion engines (crews) hook run completion to chain pipeline steps, and
+  // call notify() so their own state changes reach SSE subscribers.
+  onRunFinished(fn: (run: Run) => void): () => void {
+    this.runFinishedListeners.add(fn);
+    return () => this.runFinishedListeners.delete(fn);
+  }
+  notify() {
+    this.emit();
   }
   private emit() {
     if (this.emitTimer) return;
@@ -481,7 +492,14 @@ class Orchestrator {
   removeRun(id: string): boolean {
     const r = this.runs.get(id);
     if (!r) return false;
-    if (r.status === "running" || r.status === "queued") this.stop(id);
+    if (r.status === "running" || r.status === "queued") {
+      // Finalize BEFORE deleting the run: the child's exit handler bails once
+      // the run is gone, and finalize() is what records history, cleans up the
+      // proc entry, and notifies crew/campaign listeners (otherwise a crew
+      // whose step is removed would hang forever on a "running" step).
+      this.stop(id);
+      this.finalize(id, "stopped");
+    }
     this.runs.delete(id);
     this.nodeIndex.delete(id);
     this.nodeCount.delete(id);
@@ -667,9 +685,19 @@ class Orchestrator {
         toolCounts: run.metrics.toolCounts,
         skillCounts: run.metrics.skillCounts,
       });
+      // Trim in memory too — otherwise aggregate() sums a longer window than
+      // is ever persisted or sent to the UI, and totals shrink after restart.
+      if (this.history.length > HISTORY_CAP) this.history = this.history.slice(-HISTORY_CAP);
       this.saveHistory();
     }
     if (run.campaignId) this.onCampaignRunFinished(run);
+    for (const fn of this.runFinishedListeners) {
+      try {
+        fn(run);
+      } catch {
+        /* ignore listener errors */
+      }
+    }
     this.emit();
   }
 
@@ -735,7 +763,8 @@ class Orchestrator {
     };
   }
 
-  snapshot(): LiveSnapshot {
+  // Crews are layered on by fullSnapshot() in crews.ts (one-way import).
+  snapshot(): Omit<LiveSnapshot, "crews" | "crewRuns"> {
     const runs = [...this.runs.values()].sort((a, b) => b.createdAt - a.createdAt);
     return {
       runs,

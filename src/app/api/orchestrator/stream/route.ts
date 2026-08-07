@@ -1,4 +1,5 @@
 import { getOrchestrator } from "@/lib/orchestrator/runtime";
+import { fullSnapshot } from "@/lib/orchestrator/crews";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +18,9 @@ export async function GET() {
       const send = () => {
         if (closed) return;
         try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(orch.snapshot())}\n\n`));
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(fullSnapshot())}\n\n`));
         } catch {
-          closed = true;
+          cleanup(); // enqueue failed → the client is gone; drop interval + subscription
         }
       };
       send(); // initial state immediately
@@ -30,7 +31,7 @@ export async function GET() {
         try {
           controller.enqueue(encoder.encode(`: ping\n\n`));
         } catch {
-          closed = true;
+          cleanup();
         }
       }, 15000);
       cleanup = () => {
