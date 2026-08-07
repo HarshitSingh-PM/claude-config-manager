@@ -48,6 +48,7 @@ import TerminalShell from "./terminal/TerminalShell";
 import { UsageWidget } from "./UsageWidget";
 import { MotivationBanner } from "./MotivationBanner";
 import { MacPermissionsGate } from "./MacPermissionsGate";
+import { GlobalDropReader } from "./DocReader";
 import { InfoIcon, Tooltip } from "./Tooltip";
 
 type View =
@@ -132,10 +133,18 @@ export function AppShell() {
   // Deep-link from Library: when set, the next DirEditor / SkillsDirEditor
   // render uses this as the initially-selected child.
   const [initialChild, setInitialChild] = useState<string | null>(null);
-  const [autosave, setAutosaveState] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(AUTOSAVE_STORAGE_KEY) === "1";
-  });
+  // Initialize deterministically and hydrate from localStorage in an effect —
+  // reading localStorage during render makes the server HTML (always "off")
+  // disagree with the client's first render (hydration mismatch).
+  const [autosave, setAutosaveState] = useState<boolean>(false);
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (localStorage.getItem(AUTOSAVE_STORAGE_KEY) === "1") setAutosaveState(true);
+    } catch {
+      /* ignore */
+    }
+  }, []);
   const [now, setNow] = useState<number>(() => Date.now()); // for "saved Xs ago"
 
   const setAutosave = (v: boolean) => {
@@ -342,6 +351,10 @@ export function AppShell() {
     <MotionConfig reducedMotion="user">
     <MotivationBanner />
     <MacPermissionsGate />
+    {/* Drag a .md / .pdf from Finder (any view except the terminal workspace,
+        which has its own Finder-drop semantics) or from the workspace file
+        tree (any view; drop outside the terminal panes) to read it. */}
+    <GlobalDropReader fileDrops={view !== "terminal"} />
     <div className="min-h-screen flex flex-col">
       {/* ─── Header ───────────────────────────────────────── */}
       <header className="sticky top-0 z-30 border-b border-[color:var(--border)] bg-[color:var(--bg)]/70 backdrop-blur-xl shadow-[0_1px_0_0_var(--accent-soft)]">
@@ -658,6 +671,7 @@ export function AppShell() {
                 </Card>
               ) : target.format === "directory" && currentFile.type === "skills-dir" ? (
                 <SkillsDirEditor
+                  key={target.absolutePath}
                   dirPath={target.absolutePath}
                   reloadKey={reloadKey}
                   initialActiveSkill={initialChild}
@@ -668,6 +682,7 @@ export function AppShell() {
                 />
               ) : target.format === "directory" ? (
                 <DirEditor
+                  key={target.absolutePath}
                   dirPath={target.absolutePath}
                   kind={currentFile.type as "agents-dir" | "commands-dir" | "output-styles-dir"}
                   reloadKey={reloadKey}
@@ -681,7 +696,18 @@ export function AppShell() {
                 <StatusLineForm
                   scriptPath={target.absolutePath}
                   settingsPath={paths!.targets["user.settings"].absolutePath}
-                  onSaved={(msg) => setToast({ kind: "ok", msg })}
+                  onSaved={(msg) => {
+                    setToast({ kind: "ok", msg });
+                    // StatusLineForm writes statusLine into settings.json on
+                    // disk — drop any cached settings draft so the next save
+                    // from the settings editor doesn't resurrect a stale copy
+                    // without the statusLine key (silently uninstalling it).
+                    setFileStates((prev) => {
+                      const next = { ...prev };
+                      delete next["user.settings"];
+                      return next;
+                    });
+                  }}
                   onError={(msg) => setToast({ kind: "err", msg })}
                 />
               ) : (

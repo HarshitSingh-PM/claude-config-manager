@@ -72,6 +72,139 @@ type Action = {
   go: View;
 };
 
+// ─── token usage strip ──────────────────────────────────────────────
+type UsageMeter = {
+  usedPct: number;
+  remainingPct: number;
+  tokensUsed: number | null;
+  tokensRemaining: number | null;
+  resetAt: number | null;
+};
+
+type UsageData = {
+  available: boolean;
+  allTime?: {
+    totalTokens: number;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    messages: number;
+    files: number;
+    firstActivity: number | null;
+  } | null;
+  fiveHour?: UsageMeter;
+  weekly?: UsageMeter;
+  fableWeekly?: UsageMeter;
+};
+
+function fmtTokens(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
+function fmtReset(resetAt: number | null): string {
+  if (!resetAt) return "";
+  const ms = resetAt - Date.now();
+  if (ms <= 0) return "resetting…";
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  if (h >= 48) return `resets in ${Math.floor(h / 24)}d`;
+  if (h > 0) return `resets in ${h}h ${m}m`;
+  return `resets in ${m}m`;
+}
+
+function meterTone(remainingPct: number): "ok" | "warn" | "bad" {
+  if (remainingPct <= 10) return "bad";
+  if (remainingPct <= 25) return "warn";
+  return "ok";
+}
+
+function MeterTile({ label, meter }: { label: string; meter: UsageMeter | undefined }) {
+  const tone = meterTone(meter?.remainingPct ?? 100);
+  const barColor =
+    tone === "bad"
+      ? "bg-[color:var(--danger)]"
+      : tone === "warn"
+        ? "bg-[color:var(--warning)]"
+        : "bg-[color:var(--success)]";
+  const headline =
+    meter == null
+      ? "—"
+      : meter.tokensRemaining != null
+        ? `${fmtTokens(meter.tokensRemaining)} left`
+        : `${meter.remainingPct}% left`;
+  const subBits = [
+    meter?.tokensUsed != null ? `${fmtTokens(meter.tokensUsed)} used` : meter ? `${meter.usedPct}% used` : "",
+    fmtReset(meter?.resetAt ?? null),
+  ].filter(Boolean);
+  return (
+    <motion.div
+      variants={fadeUp}
+      className="rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)]/80 backdrop-blur-md p-5 surface-hi"
+    >
+      <div className="t-small font-medium text-[color:var(--fg-muted)]">{label}</div>
+      <div className="text-[1.55rem] leading-none font-semibold mt-3 tracking-tight text-[color:var(--fg)]">
+        {headline}
+      </div>
+      <div className="h-1.5 rounded-full bg-[color:var(--bg-elev-2)] overflow-hidden mt-3">
+        <div
+          className={`h-full rounded-full ${barColor}`}
+          style={{ width: `${Math.min(100, Math.max(0, meter?.usedPct ?? 0))}%` }}
+        />
+      </div>
+      <div className="t-label text-[color:var(--fg-faint)] mt-2">{subBits.join(" · ") || "no data yet"}</div>
+    </motion.div>
+  );
+}
+
+function UsageStrip() {
+  const [usage, setUsage] = useState<UsageData | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/usage")
+      .then((r) => r.json())
+      .then((d: UsageData) => !cancelled && setUsage(d))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!usage?.available) return null;
+  const at = usage.allTime;
+  const since = at?.firstActivity
+    ? new Date(at.firstActivity).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+    : null;
+
+  return (
+    <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" stagger={0.07}>
+      <motion.div
+        variants={fadeUp}
+        className="rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--bg-elev)]/80 backdrop-blur-md p-5 surface-hi"
+      >
+        <div className="t-small font-medium text-[color:var(--fg-muted)]">Tokens used · all time</div>
+        <div className="text-[1.55rem] leading-none font-semibold mt-3 tracking-tight text-brand-gradient">
+          {at ? fmtTokens(at.totalTokens) : "—"}
+        </div>
+        <div className="t-label text-[color:var(--fg-faint)] mt-2">
+          {at
+            ? `${fmtTokens(at.outputTokens)} generated · ${at.messages.toLocaleString()} responses${since ? ` · since ${since}` : ""}`
+            : "no local transcripts found"}
+        </div>
+        <div className="t-label text-[color:var(--fg-faint)] mt-0.5">
+          {at ? `incl. ${fmtTokens(at.cacheReadTokens)} cached-context reads` : ""}
+        </div>
+      </motion.div>
+      <MeterTile label="5-hour window" meter={usage.fiveHour} />
+      <MeterTile label="Weekly limit" meter={usage.weekly} />
+      <MeterTile label="Fable 5 · weekly" meter={usage.fableWeekly} />
+    </Stagger>
+  );
+}
+
 export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }) {
   const [data, setData] = useState<Dashboard | null>(null);
   const [projects, setProjects] = useState<ProjectLite[] | null>(null);
@@ -246,6 +379,9 @@ export function DashboardShell({ onNavigate }: { onNavigate: (v: View) => void }
           onClick={() => onNavigate("projects")}
         />
       </Stagger>
+
+      {/* token usage strip */}
+      <UsageStrip />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5">
         {/* Recommended actions */}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import { getAllTimeTotals, type AllTimeTotals } from "@/lib/usageTotals";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -92,6 +93,15 @@ async function newestUsageHistory(): Promise<string | null> {
 export async function GET() {
   const now = Date.now();
 
+  // All-time totals from local transcripts — independent of the desktop app's
+  // quota cache, so compute it first and always include it.
+  let allTime: AllTimeTotals | null = null;
+  try {
+    allTime = await getAllTimeTotals();
+  } catch {
+    allTime = null;
+  }
+
   // ── Rich source: usage history snapshots ──────────────────────
   let session: Record<string, number> | null = null;
   let weekly: Record<string, number> | null = null;
@@ -140,7 +150,7 @@ export async function GET() {
   }
 
   if (!session && !weekly && fhPct == null) {
-    return NextResponse.json({ available: false });
+    return NextResponse.json({ available: allTime != null && allTime.files > 0, allTime });
   }
 
   // Prefer the freshest reading for the headline 5h / weekly %.
@@ -175,6 +185,7 @@ export async function GET() {
 
   return NextResponse.json({
     available: true,
+    allTime,
     updatedAt: Math.max(snapshotAt ?? 0, planAt ?? 0) || now,
     fiveHour: build(fiveUsed, session?.sessionTokensUsed ?? null, sessionResetRaw, FIVE_HOUR_MS),
     weekly: build(weekUsed, weekly?.weeklyTokensUsed ?? null, weeklyResetRaw, WEEK_MS),
