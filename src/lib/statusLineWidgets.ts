@@ -34,7 +34,7 @@ export const widgets: Widget[] = [
     label: "Model",
     description: "Claude model name with type emoji (🧠 Opus / ⚡ Sonnet / 🪶 Haiku).",
     category: "session",
-    preview: "⚡ Sonnet 4.6",
+    preview: "⚡ Sonnet 5",
     deps: ["jq"],
     shell: `M=$(printf '%s' "$INPUT" | jq -r '.model.display_name // ""')
 case "$M" in

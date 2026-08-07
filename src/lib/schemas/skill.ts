@@ -112,6 +112,20 @@ export const skillSchema: Schema = {
       placeholder: "Explore",
     },
     {
+      type: "boolean",
+      key: "background",
+      label: "Run forked skill in background",
+      tooltip:
+        "With context: fork — don't block the main conversation on the skill's result (v2.1.218+).",
+    },
+    {
+      type: "list",
+      key: "disallowed-tools",
+      label: "Disallowed tools",
+      tooltip: "Tools blocked while this skill's expansion runs.",
+      itemPlaceholder: "Bash",
+    },
+    {
       type: "list",
       key: "paths",
       label: "Conditional loading: paths",

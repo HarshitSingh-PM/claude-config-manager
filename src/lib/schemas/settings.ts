@@ -22,16 +22,22 @@ export const settingsSchema: Schema = {
             "Opus = most capable, expensive. Sonnet = balanced default. Haiku = fast, cheap.",
           options: [
             { value: "", label: "(inherit / default)" },
-            { value: "sonnet", label: "sonnet", description: "Balanced — recommended default (Sonnet 4.6)" },
+            { value: "default", label: "default", description: "Your account's default (Opus 5 on Max/Enterprise, Sonnet 5 on Pro)" },
+            { value: "best", label: "best", description: "The most capable model available to you (Fable 5, else Opus 5)" },
+            { value: "sonnet", label: "sonnet", description: "Balanced — recommended default (now Sonnet 5)" },
             { value: "haiku", label: "haiku", description: "Fast & cheap, good for routine tasks (Haiku 4.5)" },
-            { value: "opus", label: "opus", description: "Most capable (now Opus 4.8)" },
+            { value: "opus", label: "opus", description: "Most capable everyday model (now Opus 5)" },
             { value: "opusplan", label: "opusplan", description: "Opus while planning, Sonnet to execute" },
-            { value: "fable", label: "fable", description: "Newest model family (Fable 5)" },
-            { value: "claude-opus-4-8", label: "claude-opus-4-8 (pinned)" },
-            { value: "claude-fable-5", label: "claude-fable-5 (pinned — newest)" },
-            { value: "claude-sonnet-4-6", label: "claude-sonnet-4-6 (pinned)" },
-            { value: "claude-opus-4-7", label: "claude-opus-4-7 (pinned)" },
+            { value: "fable", label: "fable", description: "Highest capability, premium cost (Fable 5)" },
+            { value: "sonnet[1m]", label: "sonnet[1m]", description: "Sonnet 5 with a 1M-token context window" },
+            { value: "opus[1m]", label: "opus[1m]", description: "Opus 5 with a 1M-token context window" },
+            { value: "claude-fable-5", label: "claude-fable-5 (pinned — most capable)" },
+            { value: "claude-opus-5", label: "claude-opus-5 (pinned)" },
+            { value: "claude-sonnet-5", label: "claude-sonnet-5 (pinned)" },
             { value: "claude-haiku-4-5", label: "claude-haiku-4-5 (pinned)" },
+            { value: "claude-opus-4-8", label: "claude-opus-4-8 (pinned — previous gen)" },
+            { value: "claude-opus-4-7", label: "claude-opus-4-7 (pinned — previous gen)" },
+            { value: "claude-sonnet-4-6", label: "claude-sonnet-4-6 (pinned — previous gen)" },
           ],
         },
         {
@@ -46,7 +52,28 @@ export const settingsSchema: Schema = {
             { value: "medium", label: "medium" },
             { value: "high", label: "high" },
             { value: "xhigh", label: "xhigh" },
+            { value: "max", label: "max — deepest reasoning, most tokens" },
           ],
+        },
+        {
+          type: "select",
+          key: "advisorModel",
+          label: "Advisor model",
+          tooltip: "A stronger model the main model can consult mid-task for strategic guidance.",
+          significance: "Pairs a fast executor with a smarter advisor — quality boost without running everything on the big model.",
+          options: [
+            { value: "", label: "(off)" },
+            { value: "fable", label: "fable — Fable 5" },
+            { value: "opus", label: "opus — Opus 5" },
+          ],
+        },
+        {
+          type: "list",
+          key: "availableModels",
+          label: "Available models",
+          tooltip: "Restrict which models appear in the model picker (aliases or full IDs).",
+          significance: "Useful for teams standardizing on specific models or controlling cost.",
+          itemPlaceholder: "sonnet",
         },
         {
           type: "list",
@@ -54,7 +81,7 @@ export const settingsSchema: Schema = {
           label: "Fallback models",
           tooltip: "Models tried in order when the primary is unavailable (up to 3).",
           significance: "Keeps sessions going through rate limits or provider outages.",
-          itemPlaceholder: "claude-sonnet-4-6",
+          itemPlaceholder: "claude-sonnet-5",
         },
         {
           type: "boolean",
@@ -188,6 +215,20 @@ export const settingsSchema: Schema = {
           tooltip: "Names of specific .mcp.json servers to reject.",
           itemPlaceholder: "some-untrusted-server",
         },
+        {
+          type: "list",
+          key: "allowedMcpServers",
+          label: "Allowed MCP servers (allowlist)",
+          tooltip: "If set, only these MCP servers may be used at all — from any source.",
+          itemPlaceholder: "github",
+        },
+        {
+          type: "list",
+          key: "deniedMcpServers",
+          label: "Denied MCP servers (blocklist)",
+          tooltip: "MCP servers that may never be used, regardless of other settings.",
+          itemPlaceholder: "some-untrusted-server",
+        },
       ],
     },
     {
@@ -284,6 +325,31 @@ export const settingsSchema: Schema = {
           tooltip: "Terminal color theme.",
           placeholder: "dark",
         },
+        {
+          type: "boolean",
+          key: "tui",
+          label: "New TUI renderer",
+          tooltip: "Use the newer terminal UI renderer (v2.1.188+).",
+        },
+        {
+          type: "boolean",
+          key: "spinnerTipsEnabled",
+          label: "Spinner tips",
+          tooltip: "Show rotating tips in the working spinner.",
+        },
+        {
+          type: "boolean",
+          key: "disableBundledSkills",
+          label: "Disable bundled skills",
+          tooltip: "Hide the skills that ship with Claude Code (/code-review, /doctor, …).",
+        },
+        {
+          type: "boolean",
+          key: "disableSkillShellExecution",
+          label: "Disable skill shell execution",
+          tooltip: "Prevent skills from running shell commands during expansion.",
+          significance: "A hardening option when using third-party skills you haven't audited.",
+        },
       ],
     },
     {
@@ -329,17 +395,20 @@ export const settingsSchema: Schema = {
       key: "hooks_group",
       label: "Hooks",
       tooltip:
-        "Run shell commands on lifecycle events. See the dedicated Hooks tool inside this editor (below) for a guided form.",
+        "Run shell commands on lifecycle events. Use the Hooks builder below for a guided form — always use absolute paths or $CLAUDE_PROJECT_DIR; exit code 2 = block; pipe errors to stderr.",
       fields: [
         {
-          type: "string",
-          key: "_hooksNote",
-          label: "Note",
-          tooltip: "Hooks are managed via the Hooks panel below.",
-          multiline: true,
-          rows: 2,
-          placeholder:
-            "Hooks: edit using the Hooks builder. Always use absolute paths or $CLAUDE_PROJECT_DIR; exit code 2 = block; pipe errors to stderr.",
+          type: "boolean",
+          key: "disableAllHooks",
+          label: "Disable all hooks",
+          tooltip: "Kill switch — ignore every configured hook in this scope.",
+        },
+        {
+          type: "list",
+          key: "allowedHttpHookUrls",
+          label: "Allowed HTTP hook URLs",
+          tooltip: "URL patterns that http-type hook handlers are allowed to call.",
+          itemPlaceholder: "https://hooks.internal.example.com/*",
         },
       ],
     },
@@ -356,6 +425,46 @@ export const settingsSchema: Schema = {
           label: "Auto-compact at context limit",
           tooltip: "Automatically summarize/compact the conversation when it approaches the context limit.",
           significance: "On by default. Keeps long /goal and /loop runs going without manual /compact.",
+        },
+        {
+          type: "number",
+          key: "autoCompactWindow",
+          label: "Auto-compact window (tokens)",
+          tooltip: "Context size at which auto-compact triggers (100k–1M).",
+          placeholder: "200000",
+          min: 100000,
+        },
+        {
+          type: "boolean",
+          key: "awaySummaryEnabled",
+          label: "Away summaries",
+          tooltip: "Summarize what happened while you were away from a long-running session.",
+        },
+        {
+          type: "select",
+          key: "crossSessionInbound",
+          label: "Cross-session messages",
+          tooltip: "What to do when another Claude session sends this one a message.",
+          significance: "`hold` queues messages for your review; `refuse` isolates the session.",
+          options: [
+            { value: "", label: "(default)" },
+            { value: "accept", label: "accept — deliver immediately" },
+            { value: "hold", label: "hold — queue for review" },
+            { value: "refuse", label: "refuse — block inbound messages" },
+          ],
+        },
+        {
+          type: "select",
+          key: "dialogExpiry",
+          label: "Dialog expiry",
+          tooltip: "How long permission dialogs wait before expiring.",
+          options: [
+            { value: "", label: "(default)" },
+            { value: "60s", label: "60s" },
+            { value: "5m", label: "5m" },
+            { value: "10m", label: "10m" },
+            { value: "never", label: "never" },
+          ],
         },
         {
           type: "boolean",
@@ -382,16 +491,6 @@ export const settingsSchema: Schema = {
           key: "disableRemoteControl",
           label: "Disable Remote Control",
           tooltip: "Turn off driving this session from the mobile/remote app.",
-        },
-        {
-          type: "string",
-          key: "_autonomyNote",
-          label: "Note",
-          tooltip: "Reminder about interactive autonomy commands.",
-          multiline: true,
-          rows: 2,
-          placeholder:
-            "/goal <condition> keeps Claude working until the condition holds; /loop [interval] <task> runs a task on a schedule (self-paces if no interval). These are typed in the session, not stored here.",
         },
       ],
     },
@@ -475,19 +574,41 @@ export const settingsSchema: Schema = {
 export type HookEvent =
   | "PreToolUse"
   | "PostToolUse"
+  | "PostToolUseFailure"
+  | "PostToolBatch"
+  | "PermissionRequest"
+  | "PermissionDenied"
   | "UserPromptSubmit"
+  | "UserPromptExpansion"
   | "SessionStart"
   | "SessionEnd"
+  | "Setup"
   | "Stop"
+  | "StopFailure"
   | "Notification"
   | "PreCompact"
-  | "SubagentStop";
+  | "PostCompact"
+  | "SubagentStart"
+  | "SubagentStop"
+  | "TeammateIdle"
+  | "TaskCreated"
+  | "TaskCompleted"
+  | "FileChanged"
+  | "CwdChanged"
+  | "DirectoryAdded"
+  | "WorktreeCreate"
+  | "WorktreeRemove"
+  | "ConfigChange"
+  | "InstructionsLoaded"
+  | "MessageDisplay"
+  | "Elicitation"
+  | "ElicitationResult";
 
 export const hookEvents: { value: HookEvent; label: string; tooltip: string }[] = [
   {
     value: "PreToolUse",
     label: "PreToolUse",
-    tooltip: "Before any tool runs. Use to block, validate, or audit.",
+    tooltip: "Before any tool runs. Can allow, deny, ask, or defer the call.",
   },
   {
     value: "PostToolUse",
@@ -495,14 +616,39 @@ export const hookEvents: { value: HookEvent; label: string; tooltip: string }[] 
     tooltip: "After a tool runs successfully. Use to lint, format, log.",
   },
   {
+    value: "PostToolUseFailure",
+    label: "PostToolUseFailure",
+    tooltip: "After a tool call fails. React to or block on errors.",
+  },
+  {
+    value: "PostToolBatch",
+    label: "PostToolBatch",
+    tooltip: "After a batch of parallel tool calls completes.",
+  },
+  {
+    value: "PermissionRequest",
+    label: "PermissionRequest",
+    tooltip: "When a permission dialog would show. Auto-allow or deny it.",
+  },
+  {
+    value: "PermissionDenied",
+    label: "PermissionDenied",
+    tooltip: "After a permission was denied. Can request a retry.",
+  },
+  {
     value: "UserPromptSubmit",
     label: "UserPromptSubmit",
     tooltip: "When the user submits a prompt. Use to validate or enrich.",
   },
   {
+    value: "UserPromptExpansion",
+    label: "UserPromptExpansion",
+    tooltip: "When a slash command expands. Matcher is the command name.",
+  },
+  {
     value: "SessionStart",
     label: "SessionStart",
-    tooltip: "Session begins or resumes. Load context, set env.",
+    tooltip: "Session begins/resumes/clears/forks. Load context, set env.",
   },
   {
     value: "SessionEnd",
@@ -510,23 +656,108 @@ export const hookEvents: { value: HookEvent; label: string; tooltip: string }[] 
     tooltip: "Session ends. Clean up, flush logs, persist state.",
   },
   {
+    value: "Setup",
+    label: "Setup",
+    tooltip: "Repo setup/maintenance entry points (init | maintenance).",
+  },
+  {
     value: "Stop",
     label: "Stop",
-    tooltip: "Claude finishes a turn. Post-process or notify.",
+    tooltip: "Claude finishes a turn. Post-process, notify, or block to continue.",
+  },
+  {
+    value: "StopFailure",
+    label: "StopFailure",
+    tooltip: "A turn ended with an error. Matcher is the error type.",
   },
   {
     value: "Notification",
     label: "Notification",
-    tooltip: "Claude sends a notification. Filter, log, forward.",
+    tooltip: "Claude sends a notification (permission_prompt, idle_prompt, …).",
   },
   {
     value: "PreCompact",
     label: "PreCompact",
-    tooltip: "Before context compaction. Save state.",
+    tooltip: "Before context compaction (manual | auto). Save state.",
+  },
+  {
+    value: "PostCompact",
+    label: "PostCompact",
+    tooltip: "After context compaction (manual | auto). Re-inject context.",
+  },
+  {
+    value: "SubagentStart",
+    label: "SubagentStart",
+    tooltip: "A subagent starts. Matcher is the agent type name.",
   },
   {
     value: "SubagentStop",
     label: "SubagentStop",
     tooltip: "Subagent finishes. Aggregate results.",
+  },
+  {
+    value: "TeammateIdle",
+    label: "TeammateIdle",
+    tooltip: "An agent-team teammate goes idle. Keep it working or let it rest.",
+  },
+  {
+    value: "TaskCreated",
+    label: "TaskCreated",
+    tooltip: "A task is created on the task list.",
+  },
+  {
+    value: "TaskCompleted",
+    label: "TaskCompleted",
+    tooltip: "A task is marked completed. Verify or block completion.",
+  },
+  {
+    value: "FileChanged",
+    label: "FileChanged",
+    tooltip: "A watched file changed. Matcher is the filename pattern.",
+  },
+  {
+    value: "CwdChanged",
+    label: "CwdChanged",
+    tooltip: "The working directory changed.",
+  },
+  {
+    value: "DirectoryAdded",
+    label: "DirectoryAdded",
+    tooltip: "A directory was added to the session (slash command or repo root).",
+  },
+  {
+    value: "WorktreeCreate",
+    label: "WorktreeCreate",
+    tooltip: "A worktree is being created. Return a path to control placement.",
+  },
+  {
+    value: "WorktreeRemove",
+    label: "WorktreeRemove",
+    tooltip: "A worktree is being removed. Clean up.",
+  },
+  {
+    value: "ConfigChange",
+    label: "ConfigChange",
+    tooltip: "Settings/skills changed mid-session. Audit or block.",
+  },
+  {
+    value: "InstructionsLoaded",
+    label: "InstructionsLoaded",
+    tooltip: "CLAUDE.md / instructions were loaded. Matcher is the load reason.",
+  },
+  {
+    value: "MessageDisplay",
+    label: "MessageDisplay",
+    tooltip: "Before a message renders. Can replace the displayed content.",
+  },
+  {
+    value: "Elicitation",
+    label: "Elicitation",
+    tooltip: "An MCP server asks the user for input. Accept, decline, or cancel.",
+  },
+  {
+    value: "ElicitationResult",
+    label: "ElicitationResult",
+    tooltip: "After the user answers an MCP elicitation.",
   },
 ];
