@@ -25,8 +25,16 @@ export const outputStyleSchema: Schema = {
       key: "keep-coding-instructions",
       label: "Keep coding instructions",
       tooltip:
-        "If true, your text is appended to the default system prompt. If false, it replaces it entirely.",
-      default: true,
+        "On: keep Claude Code's built-in software-engineering instructions alongside your style. Off (the default): your style replaces them.",
+      default: false,
+    },
+    {
+      type: "boolean",
+      key: "force-for-plugin",
+      label: "Force for plugin (plugin styles only)",
+      tooltip:
+        "Apply this style automatically whenever its plugin is enabled, overriding the user's outputStyle setting.",
+      default: false,
     },
     {
       type: "string",

@@ -144,10 +144,11 @@ Precedence (later wins): user → project shared → project local → enterpris
 
 ### What it edits
 
-- **`settings.json`** — model, permissions (allow/deny/ask), hooks, status line, env, sandbox, telemetry, output style, theme.
+- **`settings.json`** — every key in the Claude Code 2.1.28x settings reference, in 16 collapsible, filterable groups: model & reasoning (effort caps, fallback chain, fast mode, ultracode, prompt-cache lifetime), permissions and auto-mode classifier rules, the full sandbox (filesystem, network, credentials), MCP allow/deny lists, env, memory & context, interface & terminal, status line, git attribution, plugins & skills, agents & worktrees, Remote Control & notifications, auth helpers, updates & privacy, and managed-only policy keys. Toggles show Claude Code's real default when a key is unset.
+- **Hooks builder** — all 33 lifecycle events (incl. `PreModelSwitch` / `PostModelSwitch`), matcher hints per event, and all five handler types: `command`, `http`, `mcp_tool`, `prompt`, `agent`.
 - **Credentials** *(Global Claude only)* — AWS, GCP, Azure, Cloudflare, Fly, Vercel, Netlify, GitHub, GitLab, Postgres, Supabase, Neon, MongoDB, Redis, Slack, Linear, Notion, OpenAI, Anthropic, Stripe, Sentry, Datadog and more — masked inputs, eye-toggles, deep links, written into the `env` block of `~/.claude/settings.json`.
 - **`CLAUDE.md`** / **`CLAUDE.local.md`** — markdown editor with line/char counts, 12 section templates, and four full-doc presets (Karpathy, HumanLayer, Trail of Bits, Minimal).
-- **`.mcp.json`** · **`keybindings.json`** · **`agents/`** · **`commands/`** · **`output-styles/`** · **`managed-settings.json`** — all guided, all templated.
+- **`.mcp.json`** (stdio / http / sse / ws, OAuth, headers helper, per-server timeout) · **`keybindings.json`** (all 24 contexts, `null` to unbind) · **`agents/`** · **`commands/`** · **`skills/`** · **`output-styles/`** · **`managed-settings.json`** — all guided, all templated.
 
 ---
 

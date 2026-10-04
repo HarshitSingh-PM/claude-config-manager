@@ -1,11 +1,30 @@
 "use client";
+import { useState } from "react";
 import { settingsSchema } from "@/lib/schemas/settings";
+import type { Field } from "@/lib/schemas/types";
 import { settingsPresets } from "@/lib/presets/settings";
 import { FieldRenderer } from "../Field";
-import { Card, SectionHeader } from "../primitives";
-import { Sparkles, Plus } from "lucide-react";
+import { HooksEditor } from "./HooksEditor";
+import { Card, SectionHeader, TextInput } from "../primitives";
+import { Sparkles, Plus, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { deepMerge } from "@/lib/utils";
+
+// Keep only the fields (and the groups holding them) that match the query.
+function filterFields(fields: Field[], q: string): Field[] {
+  const out: Field[] = [];
+  for (const f of fields) {
+    const self = `${f.key} ${f.label} ${f.tooltip}`.toLowerCase().includes(q);
+    if (f.type === "group") {
+      if (self) out.push(f);
+      else {
+        const kids = filterFields(f.fields, q);
+        if (kids.length > 0) out.push({ ...f, fields: kids });
+      }
+    } else if (self) out.push(f);
+  }
+  return out;
+}
 
 export function SettingsForm({
   values,
@@ -14,17 +33,42 @@ export function SettingsForm({
   values: Record<string, unknown>;
   onChange: (v: Record<string, unknown>) => void;
 }) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const fields = q ? filterFields(settingsSchema.fields, q) : settingsSchema.fields;
+  const showHooks = !q || "hooks".includes(q) || q.includes("hook");
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-5">
       <Card className="p-5 space-y-5">
-        {settingsSchema.fields.map((f) => (
-          <FieldRenderer
-            key={f.key}
-            field={f}
-            values={values}
-            onChange={onChange}
+        <div className="relative">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--fg-faint)] pointer-events-none"
           />
+          <TextInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Filter settings — try “sandbox”, “worktree”, “notif”…"
+            className="pl-9"
+          />
+        </div>
+        {fields.map((f) => (
+          // Remount when the filter toggles so groups pick up the right
+          // open/closed state instead of keeping the filtered one.
+          <div key={`${f.key}:${q ? "f" : "a"}`} className="space-y-5">
+            <FieldRenderer field={f} values={values} onChange={onChange} forceOpen={Boolean(q)} />
+            {f.key === "hooks_group" && showHooks && <HooksEditor values={values} onChange={onChange} />}
+          </div>
         ))}
+        {q && showHooks && !fields.some((f) => f.key === "hooks_group") && (
+          <HooksEditor values={values} onChange={onChange} />
+        )}
+        {q && fields.length === 0 && !showHooks && (
+          <p className="text-xs text-[color:var(--fg-faint)] py-6 text-center">
+            No setting matches “{query}”.
+          </p>
+        )}
       </Card>
 
       <Card className="p-4 self-start sticky top-4">

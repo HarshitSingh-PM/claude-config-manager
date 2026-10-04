@@ -70,12 +70,15 @@ export const skillSchema: Schema = {
       type: "select",
       key: "model",
       label: "Model override",
-      tooltip: "Use a different Claude model for this skill (otherwise inherits the session).",
+      tooltip: "Model used while this skill is active — for the rest of the current turn only.",
       options: [
         { value: "", label: "(inherit)" },
+        { value: "inherit", label: "inherit — keep the active model" },
         { value: "sonnet", label: "sonnet" },
         { value: "haiku", label: "haiku" },
         { value: "opus", label: "opus" },
+        { value: "fable", label: "fable" },
+        { value: "opusplan", label: "opusplan" },
       ],
     },
     {
@@ -116,7 +119,8 @@ export const skillSchema: Schema = {
       key: "background",
       label: "Run forked skill in background",
       tooltip:
-        "With context: fork — don't block the main conversation on the skill's result (v2.1.218+).",
+        "With context: fork — on by default. Turn off to wait for the forked subagent's result in the turn that invoked the skill.",
+      default: true,
     },
     {
       type: "list",
@@ -157,6 +161,38 @@ export const skillSchema: Schema = {
         { value: "", label: "bash (default)" },
         { value: "powershell", label: "powershell" },
       ],
+    },
+    {
+      type: "json",
+      key: "hooks",
+      label: "Hooks (registered when the skill runs)",
+      tooltip:
+        "Hooks registered when the skill is invoked, kept for the rest of the session. Same format as settings.json hooks; handlers may set `once: true`.",
+      placeholder:
+        '{ "PostToolUse": [{ "matcher": "Edit|Write", "hooks": [{ "type": "command", "command": "npm run lint", "once": true }] }] }',
+      rows: 4,
+    },
+    {
+      type: "string",
+      key: "license",
+      label: "License",
+      tooltip: "License covering the skill (Agent Skills spec). Claude Code accepts it but doesn't act on it.",
+      placeholder: "MIT",
+    },
+    {
+      type: "string",
+      key: "compatibility",
+      label: "Compatibility",
+      tooltip: "Environment requirements — intended products or system prerequisites. Up to 500 characters.",
+      placeholder: "Requires git and Node 20+",
+    },
+    {
+      type: "json",
+      key: "metadata",
+      label: "Metadata (your own key-values)",
+      tooltip: "Free-form map read by your own tooling. Claude Code doesn't act on its contents.",
+      placeholder: '{ "owner": "platform-team", "version": "1.2.0" }',
+      rows: 2,
     },
     {
       type: "string",

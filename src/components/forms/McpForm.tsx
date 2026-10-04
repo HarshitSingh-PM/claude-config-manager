@@ -6,56 +6,30 @@ import { Plus, Trash2, ServerCog } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 
-type ServerEntry = {
-  name: string;
-  type: "stdio" | "http" | "sse";
-  command?: string;
-  args?: string[];
-  url?: string;
-  headers?: Record<string, string>;
-  env?: Record<string, string>;
-  alwaysLoad?: boolean;
-  /** The original on-disk entry — preserved so keys this form doesn't model
-   *  (cwd, timeout, disabled, …) survive an edit. */
-  raw?: Record<string, unknown>;
-};
+// A server entry is its on-disk object plus `name` (the key under
+// mcpServers). Keeping the whole object means keys this form doesn't model
+// (cwd, disabled, …) survive an edit, and switching transport back and forth
+// never destroys the other transport's config.
+type ServerEntry = Record<string, unknown> & { name: string };
 
 function fromObject(obj: Record<string, unknown>): ServerEntry[] {
   const servers = (obj.mcpServers as Record<string, Record<string, unknown>> | undefined) ?? {};
   return Object.entries(servers).map(([name, v]) => ({
+    ...(v && typeof v === "object" ? v : {}),
+    type: (v?.type as string | undefined) ?? "stdio",
     name,
-    type: ((v.type as ServerEntry["type"]) ?? "stdio"),
-    command: v.command as string | undefined,
-    args: v.args as string[] | undefined,
-    url: v.url as string | undefined,
-    headers: v.headers as Record<string, string> | undefined,
-    env: v.env as Record<string, string> | undefined,
-    alwaysLoad: v.alwaysLoad as boolean | undefined,
-    raw: v,
   }));
 }
 
 // `original` is the full previous file object — top-level keys we don't model
-// ($schema, …) ride along, as do unmodelled per-server keys via `raw`. Fields
-// the form DOES own are written from current form state (or removed when the
-// user cleared them), regardless of the selected transport, so switching
-// transport back and forth never destroys the other transport's config.
+// ($schema, …) ride along.
 function toObject(servers: ServerEntry[], original: Record<string, unknown>): Record<string, unknown> {
   const mcpServers: Record<string, Record<string, unknown>> = {};
   for (const s of servers) {
     if (!s.name.trim()) continue;
-    const entry: Record<string, unknown> = { ...(s.raw ?? {}), type: s.type };
-    const put = (k: string, v: unknown, keep: boolean) => {
-      if (keep) entry[k] = v;
-      else delete entry[k];
-    };
-    put("command", s.command, Boolean(s.command));
-    put("args", s.args, Boolean(s.args?.length));
-    put("url", s.url, Boolean(s.url));
-    put("headers", s.headers, Boolean(s.headers && Object.keys(s.headers).length));
-    put("env", s.env, Boolean(s.env && Object.keys(s.env).length));
-    put("alwaysLoad", true, Boolean(s.alwaysLoad));
-    mcpServers[s.name] = entry;
+    const { name, ...entry } = s;
+    if (!entry.alwaysLoad) delete entry.alwaysLoad;
+    mcpServers[name] = entry;
   }
   return { ...original, mcpServers };
 }
@@ -78,7 +52,7 @@ export function McpForm({
       i += 1;
       name = `${base}-${i}`;
     }
-    const next = [...servers, { name, type: "stdio" } as ServerEntry];
+    const next: ServerEntry[] = [...servers, { name, type: "stdio" }];
     onChange(toObject(next, values));
     setExpanded(name);
   };
@@ -130,7 +104,7 @@ export function McpForm({
                   >
                     <span className="font-mono text-[12.5px] text-[color:var(--fg)]">{s.name}</span>
                     <span className="text-[10px] uppercase tracking-wide text-[color:var(--fg-faint)] border border-[color:var(--border)] px-1.5 py-0.5 rounded">
-                      {s.type}
+                      {String(s.type)}
                     </span>
                   </button>
                   <IconButton
@@ -154,23 +128,16 @@ export function McpForm({
                           <FieldRenderer
                             key={f.key}
                             field={f}
-                            values={s as unknown as Record<string, unknown>}
+                            values={s}
                             onChange={(nv) => {
-                              // Build the entry from the form values directly —
-                              // a key ABSENT from nv means the user cleared it,
-                              // which a diff-based patch could never express.
+                              // FieldRenderer hands back the whole entry with cleared
+                              // keys removed, so it IS the next on-disk object.
                               const rec = nv as Record<string, unknown>;
                               const newName = String(rec.name ?? s.name).trim() || s.name;
                               const updated: ServerEntry = {
+                                ...rec,
+                                type: (rec.type as string | undefined) ?? "stdio",
                                 name: newName,
-                                type: ((rec.type as ServerEntry["type"]) ?? "stdio"),
-                                command: rec.command as string | undefined,
-                                args: rec.args as string[] | undefined,
-                                url: rec.url as string | undefined,
-                                headers: rec.headers as Record<string, string> | undefined,
-                                env: rec.env as Record<string, string> | undefined,
-                                alwaysLoad: rec.alwaysLoad as boolean | undefined,
-                                raw: s.raw,
                               };
                               const next = servers.map((x) => (x.name === s.name ? updated : x));
                               onChange(toObject(next, values));

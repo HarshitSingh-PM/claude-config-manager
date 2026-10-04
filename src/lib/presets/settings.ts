@@ -176,4 +176,50 @@ export const settingsPresets: SettingsPreset[] = [
       },
     },
   },
+  {
+    id: "sandbox-on",
+    title: "Sandbox Bash (fail closed)",
+    source: "Anthropic — sandboxing",
+    description:
+      "Isolate Bash from your filesystem and network, refuse to start if the sandbox is unavailable, and hide cloud credentials from sandboxed commands.",
+    patch: {
+      sandbox: {
+        enabled: true,
+        failIfUnavailable: true,
+        filesystem: { denyRead: ["~/.aws/credentials", "~/.ssh", "~/.config/gh"] },
+        network: { allowedDomains: ["github.com", "registry.npmjs.org"] },
+      },
+    },
+  },
+  {
+    id: "fallback-chain",
+    title: "Model fallback chain",
+    source: "Anthropic — model configuration",
+    description: "Keep working through overloads: fall back to Sonnet, then Haiku, when the primary model is unavailable.",
+    patch: {
+      fallbackModel: ["sonnet", "haiku"],
+    },
+  },
+  {
+    id: "notify-when-waiting",
+    title: "Hook: desktop alert when Claude needs you",
+    source: "Anthropic — hooks reference (Notification)",
+    description: "macOS notification whenever a permission prompt or background agent is waiting for input.",
+    patch: {
+      hooks: {
+        Notification: [
+          {
+            matcher: "permission_prompt|agent_needs_input",
+            hooks: [
+              {
+                type: "command",
+                command:
+                  "osascript -e 'display notification \"Claude Code needs your input\" with title \"Claude Code\"'",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  },
 ];

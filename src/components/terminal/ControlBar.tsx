@@ -20,9 +20,9 @@ import {
 // CLI itself works.
 
 const MODELS = [
-  { label: "Fable 5", arg: "fable", desc: "Anthropic's most capable model — deepest reasoning, premium cost." },
-  { label: "Opus 5", arg: "opus", desc: "Most capable everyday model — best for hard tasks." },
-  { label: "Sonnet 5", arg: "sonnet", desc: "Balanced quality/speed — a strong everyday default." },
+  { label: "Fable 5.1", arg: "fable", desc: "Anthropic's most capable model — deepest reasoning, premium cost." },
+  { label: "Opus 5.5", arg: "opus", desc: "Most capable everyday model — best for hard tasks." },
+  { label: "Sonnet 5.5", arg: "sonnet", desc: "Balanced quality/speed — a strong everyday default." },
   { label: "Haiku 4.5", arg: "haiku", desc: "Fastest & cheapest — great for simple, high-volume work." },
   { label: "Opus Plan", arg: "opusplan", desc: "Opus while planning, Sonnet to execute — quality where it counts, cheaper to run." },
   { label: "Opus 1M", arg: "opus[1m]", desc: "Opus with a 1M-token context — for very large codebases (uses more of your limit)." },

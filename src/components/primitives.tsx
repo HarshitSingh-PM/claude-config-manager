@@ -164,6 +164,7 @@ export function NumberInput({
   return (
     <input
       type="number"
+      step="any"
       value={value === undefined ? "" : value}
       placeholder={placeholder}
       min={min}

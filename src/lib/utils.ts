@@ -19,15 +19,28 @@ export function setDeep(
     return { ...obj, [path]: value };
   }
   const [head, ...rest] = path.split(".");
-  const child = (obj[head] as Record<string, unknown> | undefined) ?? {};
-  return { ...obj, [head]: setDeep(child, rest.join("."), value) };
+  const existing = obj[head];
+  const child =
+    existing && typeof existing === "object" && !Array.isArray(existing)
+      ? (existing as Record<string, unknown>)
+      : {};
+  const nextChild = setDeep(child, rest.join("."), value);
+  // Clearing the last key of a nested object removes the object too, so a
+  // cleared `worktree.baseRef` doesn't leave `"worktree": {}` behind.
+  const clearing = value === undefined || value === "" || value === null;
+  if (clearing && Object.keys(nextChild).length === 0) {
+    const next = { ...obj };
+    delete next[head];
+    return next;
+  }
+  return { ...obj, [head]: nextChild };
 }
 
 export function getDeep(obj: Record<string, unknown>, path: string): unknown {
   if (!path.includes(".")) return obj[path];
   const [head, ...rest] = path.split(".");
   const child = obj[head] as Record<string, unknown> | undefined;
-  if (!child) return undefined;
+  if (!child || typeof child !== "object") return undefined;
   return getDeep(child, rest.join("."));
 }
 
