@@ -64,7 +64,7 @@ function TranscriptViewer({ meta, onClose, onReopen }: {
       const data = await res.json().catch(() => ({ content: "" }));
       if (disposed || !host.current) return;
       term = new Terminal({
-        theme: { background: "#070809", foreground: "#f2f3f5", cursor: "#070809" },
+        theme: { background: "#14110f", foreground: "#f2f3f5", cursor: "#14110f" },
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
         fontSize: 12.5,
         lineHeight: 1.25,

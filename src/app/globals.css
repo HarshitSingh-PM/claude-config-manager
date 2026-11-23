@@ -1,52 +1,53 @@
 @import "tailwindcss";
 
 :root {
-  /* ─── Surfaces: true black, flat, high-contrast (Uber-like) ─── */
-  --bg: #060607;
-  --bg-elev: #0d0d0f;
-  --bg-elev-2: #151517;
-  --bg-elev-3: #1c1c20;
-  --border: #262629;
-  --border-strong: #3a3a40;
+  /* ─── v0.14 "Ember" — warm graphite surfaces, soft depth ─────── */
+  --bg: #14110f;
+  --bg-elev: #1b1815;
+  --bg-elev-2: #231f1b;
+  --bg-elev-3: #2c2722;
+  --border: #302b26;
+  --border-strong: #463f38;
 
   /* ─── Text (WCAG AA on --bg) ──────────────────────────────── */
-  --fg: #f6f6f7;        /* ~18:1 */
-  --fg-muted: #9c9ca4;  /* ~7:1  */
-  --fg-faint: #808089;  /* ~4.7:1 */
+  --fg: #f5f1ec;        /* ~16:1 */
+  --fg-muted: #b0a79d;  /* ~8:1  */
+  --fg-faint: #8f867c;  /* ~5:1  */
 
-  /* ─── Bauhaus: monochrome canvas, only primary colors (R/Y/B) ──
-       blue = interactive/active/primary · red = live/destructive ·
-       yellow = warning/highlight. Nothing else carries hue. ─────── */
-  --blue: #4a7bff;
-  --red: #f5333a;
-  --yellow: #ffd21e;
+  /* ─── Palette: ember coral is the single brand hue; semantic
+       colors are real green / amber / red so state reads at a glance. */
+  --blue: #6ea0ff;
+  --coral: #e5805a;
+  --green: #5bc489;
+  --red: #ef5b57;
+  --yellow: #f2b94b;
 
-  /* Interactive/primary == blue */
-  --accent: var(--blue);
-  --accent-2: #3a63e6;
-  --accent-strong: #6a92ff;
-  --accent-soft: rgba(74, 123, 255, 0.15);
-  --accent-glow: rgba(74, 123, 255, 0.22);
-  --accent-ink: #ffffff;     /* text on blue fills */
+  /* Interactive/primary == coral */
+  --accent: var(--coral);
+  --accent-2: #cf6b45;
+  --accent-strong: #f09a79;
+  --accent-soft: rgba(229, 128, 90, 0.14);
+  --accent-glow: rgba(229, 128, 90, 0.24);
+  --accent-ink: #1a110c;     /* text on coral fills */
 
-  --primary: var(--blue);
-  --primary-ink: #ffffff;
+  --primary: var(--coral);
+  --primary-ink: #1a110c;
 
-  /* ─── Semantic → primary colors ───────────────────────────── */
-  --success: var(--blue);    /* affirmative = blue (no green in the system) */
+  --success: var(--green);
   --warning: var(--yellow);
   --danger: var(--red);
+  --info: var(--blue);
 
-  /* ─── Tight, mechanical radii ─────────────────────────────── */
-  --radius-sm: 4px;
-  --radius: 7px;
-  --radius-lg: 11px;
-  --radius-xl: 14px;
+  /* ─── Softer, friendlier radii ────────────────────────────── */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
 
-  /* ─── Crisp shadows, minimal glow ─────────────────────────── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.55);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.65);
-  --shadow-lg: 0 12px 34px rgba(0, 0, 0, 0.62), 0 2px 6px rgba(0, 0, 0, 0.5);
+  /* ─── Layered, warm shadows ───────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 0 1px var(--accent-soft);
 }
 
@@ -68,6 +69,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-info: var(--info);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -82,32 +84,18 @@ html, body {
   line-height: 1.5;
 }
 
-/* ─── Mechanical backdrop: a precise engineering grid (fine + coarse)
-       plus a top vignette. Static and exact — no drifting blobs. ── */
+/* ─── Backdrop: a quiet warm glow at the top, nothing busy. ─── */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.020) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.020) 1px, transparent 1px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.030) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.030) 1px, transparent 1px);
-  background-size: 28px 28px, 28px 28px, 140px 140px, 140px 140px;
-  mask-image: radial-gradient(120% 90% at 50% -10%, black 30%, transparent 92%);
-  pointer-events: none;
-}
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
   background:
-    radial-gradient(70% 40% at 50% -8%, rgba(255, 255, 255, 0.035), transparent 70%),
-    radial-gradient(120% 100% at 50% 120%, rgba(0, 0, 0, 0.5), transparent 60%);
+    radial-gradient(60% 38% at 18% -6%, rgba(229, 128, 90, 0.09), transparent 70%),
+    radial-gradient(50% 34% at 92% -4%, rgba(110, 160, 255, 0.05), transparent 70%);
   pointer-events: none;
 }
+body::after { content: none; }
 
 /* ─── Type scale — tight, engineered tracking ─────────────────── */
 .t-display { font-size: clamp(1.9rem, 1.2rem + 2.4vw, 2.9rem); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; }
@@ -120,7 +108,7 @@ body::after {
 /* Eyebrows & data labels are monospace — the mechanical/instrument voice. */
 .t-eyebrow {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.6875rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 500;
+  font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
 }
 .t-mono { font-family: var(--font-geist-mono), ui-monospace, monospace; letter-spacing: 0.02em; }
 
@@ -173,11 +161,11 @@ body::after {
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
   background: var(--border-strong);
-  border-radius: 2px;
+  border-radius: 6px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-*::-webkit-scrollbar-thumb:hover { background: #4a4a52; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: #5a5148; background-clip: padding-box; }
 
 ::selection { background: color-mix(in srgb, var(--accent) 34%, transparent); color: var(--fg); }
 

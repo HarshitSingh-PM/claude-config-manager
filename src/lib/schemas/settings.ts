@@ -1,7 +1,7 @@
 import type { Field, FieldScope, Schema } from "./types";
 
 // Coverage follows the official settings reference
-// (https://code.claude.com/docs/en/settings-reference), Claude Code 2.1.28x.
+// (https://code.claude.com/docs/en/settings-reference), Claude Code 2.1.330.
 // Keys that only work in ~/.claude.json ("Global config") are deliberately
 // absent: Claude Code ignores them in a settings file.
 
@@ -90,10 +90,10 @@ export const modelOptions = [
   { value: "opusplan", label: "opusplan", description: "Opus while planning, Sonnet to execute" },
   { value: "sonnet[1m]", label: "sonnet[1m]", description: "Sonnet with a 1M-token context window" },
   { value: "opus[1m]", label: "opus[1m]", description: "Opus with a 1M-token context window" },
-  { value: "claude-fable-5-1", label: "claude-fable-5-1 (pinned — most capable)" },
+  { value: "claude-fable-5-2", label: "claude-fable-5-2 (pinned — most capable)" },
   { value: "claude-opus-5-5", label: "claude-opus-5-5 (pinned)" },
   { value: "claude-sonnet-5-5", label: "claude-sonnet-5-5 (pinned)" },
-  { value: "claude-haiku-4-5", label: "claude-haiku-4-5 (pinned)" },
+  { value: "claude-haiku-5-5", label: "claude-haiku-5-5 (pinned)" },
   { value: "claude-fable-5", label: "claude-fable-5 (pinned — previous)" },
   { value: "claude-opus-5", label: "claude-opus-5 (pinned — previous)" },
   { value: "claude-sonnet-5", label: "claude-sonnet-5 (pinned — previous)" },
@@ -232,6 +232,10 @@ export const settingsSchema: Schema = {
       bool("permissions.blockReadsOutsideWorkingDirectories", "Block reads outside working directories", "Make Read, Grep, Glob and LSP refuse paths outside your working directories in every mode — including bypassPermissions.", false, {
         significance: "A `true` in any settings file applies.",
       }),
+      bool("permissions.blockWritesOutsideWorkingDirectories", "Block writes outside working directories", "Make Write, Edit and NotebookEdit refuse paths outside your working directories in every permission mode.", false, {
+        significance: "Counterpart of the read block. Applies in every mode, including bypassPermissions.",
+      }),
+      bool("permissions.denyInsteadOfPrompting", "Deny instead of prompting", "A tool call that would wait on a permission prompt is denied and the turn continues — in terminal sessions, subagents and teammates.", false),
       select("permissions.disableBypassPermissionsMode", "Bypass-permissions mode", "Set to `disable` to reject --dangerously-skip-permissions and any bypassPermissions request.", ["disable"], { unset: "(allowed)" }),
       select("disableAutoMode", "Auto mode", "Set to `disable` to remove auto mode from the Shift+Tab cycle and reject --permission-mode auto.", ["disable"], { unset: "(allowed)" }),
       bool("useAutoModeDuringPlan", "Use the auto-mode classifier in plan mode", "Let the classifier review shell commands while planning, so safe read-only commands don't prompt.", true, { scope: "user" }),
@@ -251,6 +255,7 @@ export const settingsSchema: Schema = {
         significance: "Without sandbox, deny rules don't block arbitrary Bash commands — only Claude's built-in tools.",
       }),
       bool("sandbox.failIfUnavailable", "Fail if the sandbox can't start", "Exit at startup instead of silently running unsandboxed when a dependency is missing or the platform is unsupported.", false),
+      bool("sandbox.allowNestedUserNamespaces", "Allow nested user namespaces (Linux)", "Let sandboxed commands create user namespaces (Chromium, rootless podman). This lets them get around the sandbox's file protections.", false),
       bool("sandbox.autoAllowBashIfSandboxed", "Auto-allow sandboxed Bash", "Run sandboxed commands without a permission prompt. Deny rules and content-scoped ask rules still apply.", true),
       bool("sandbox.allowUnsandboxedCommands", "Allow retry outside the sandbox", "Let Claude retry a blocked command unsandboxed (dangerouslyDisableSandbox) — through the normal permission flow.", true),
       list("sandbox.excludedCommands", "Commands that run outside the sandbox", "Tools that don't work under the sandbox. Same syntax as the inside of a Bash(...) rule.", "docker *"),
@@ -403,13 +408,12 @@ export const settingsSchema: Schema = {
       num("statusLine.padding", "Padding", "Left/right padding in characters.", { placeholder: "0", min: 0 }),
       num("statusLine.refreshInterval", "Refresh interval (seconds)", "Also re-run the command every N seconds — for clocks or state that changes while the session is idle.", { placeholder: "5", min: 1 }),
       bool("statusLine.hideVimModeIndicator", "Hide built-in vim mode indicator", "Suppress `-- INSERT --` when your script renders vim.mode itself.", false),
-      select("subagentStatusLine.type", "Subagent rows: type", "Run your own command to render each subagent's row in the agent panel.", ["command"], { unset: "(default rows)" }),
-      str("subagentStatusLine.command", "Subagent rows: command", "Command that rewrites the `name · description · token count` row for each subagent.", "~/.claude/subagent-statusline.sh"),
     ], true),
 
     group("git_group", "Git & attribution", "What Claude adds to commits and pull requests.", [
       str("attribution.commit", "Commit attribution", "Text (including trailers) added to commits. Default: a Co-Authored-By trailer.", "Co-Authored-By: Claude <noreply@anthropic.com>"),
       str("attribution.pr", "PR attribution", "Text added to pull request descriptions.", "🤖 Generated with Claude Code"),
+      str("attributionProject", "Billing group (attribution project)", "Names the session's billing group, for Claude apps gateways that set admin.billing_group_tag.", "platform-team"),
       bool("attribution.sessionUrl", "Append session link", "Add the claude.ai session link to commits/PRs made from cloud or Remote Control sessions.", true),
       bool("includeCoAuthoredBy", "Co-Authored-By trailer (deprecated)", "Deprecated — use the attribution fields above. Turning this off removes Claude's byline from commits and PRs.", true),
       bool("includeGitInstructions", "Built-in git instructions", "Include Claude Code's commit/PR workflow instructions and a git status snapshot in context.", true, {
@@ -505,7 +509,7 @@ export const settingsSchema: Schema = {
 
     group("updates_group", "Updates & privacy", "Release channel, data retention and feedback prompts.", [
       select("autoUpdatesChannel", "Auto-updates channel", "`stable` is about a week old and skips releases with major regressions.", ["latest", "stable"]),
-      str("minimumVersion", "Minimum version", "Never auto-install a version below this — prevents a downgrade when moving to stable.", "2.1.280"),
+      str("minimumVersion", "Minimum version", "Never auto-install a version below this — prevents a downgrade when moving to stable.", "2.1.300"),
       num("desktopSessionCleanupPeriodDays", "Desktop transcript retention (days)", "Age limit for Desktop/Cowork session transcripts. 0 = keep forever.", { placeholder: "0", min: 0, scope: "user" }),
       select("feedbackDrafts", "Claude-drafted feedback", "Whether Claude may queue feedback drafts for you to review, and whether a card shows.", ["notify", "quiet", "off"], { scope: "user" }),
       num("feedbackSurveyRate", "Session survey rate (0–1)", "Probability the session quality survey appears when eligible. 0 turns it off.", { placeholder: "0", min: 0, max: 1 }),
@@ -533,8 +537,8 @@ export const settingsSchema: Schema = {
       },
       str("forceLoginGatewayUrl", "Login gateway URL", "Gateway URL the /login Cloud gateway screen connects to.", "https://gateway.example.com", { scope: "managed" }),
       list("gatewayInternalNetworks", "Gateway internal networks", "Public IPv4 CIDR blocks your internal network uses, so /login accepts a gateway there (max 4).", "203.0.113.0/24", { scope: "managed" }),
-      str("requiredMinimumVersion", "Required minimum version", "Oldest Claude Code version allowed to start.", "2.1.250", { scope: "managed" }),
-      str("requiredMaximumVersion", "Required maximum version", "Newest Claude Code version allowed to start.", "2.1.289", { scope: "managed" }),
+      str("requiredMinimumVersion", "Required minimum version", "Oldest Claude Code version allowed to start.", "2.1.290", { scope: "managed" }),
+      str("requiredMaximumVersion", "Required maximum version", "Newest Claude Code version allowed to start.", "2.1.330", { scope: "managed" }),
       { type: "string", key: "claudeMd", label: "Managed CLAUDE.md", tooltip: "Instructions injected as organization-managed memory, ahead of user and project CLAUDE.md.", multiline: true, rows: 4, placeholder: "# Company engineering rules\n…", scope: "managed" },
       bool("channelsEnabled", "Allow channels", "Channels are blocked on Team and Enterprise plans until this is on.", false, { scope: "managed" }),
       json("allowedChannelPlugins", "Allowed channel plugins", "Which channel plugins can push messages into sessions.", '[{ "marketplace": "acme-tools", "plugin": "pager" }]', { scope: "managed", rows: 2 }),
@@ -617,7 +621,7 @@ export const hookEvents: { value: HookEvent; label: string; tooltip: string }[] 
   {
     value: "PostToolUse",
     label: "PostToolUse",
-    tooltip: "After a tool runs successfully. Use to lint, format, log.",
+    tooltip: "After a tool runs successfully. Use to lint, format, log. A hook can return updatedToolOutput (or updatedMCPToolOutput for MCP tools) to replace what Claude sees — e.g. to redact output.",
   },
   {
     value: "PostToolUseFailure",
@@ -727,7 +731,7 @@ export const hookEvents: { value: HookEvent; label: string; tooltip: string }[] 
   {
     value: "FileChanged",
     label: "FileChanged",
-    tooltip: "A watched file changed. Matcher is the filename pattern.",
+    tooltip: "A watched file changed. Matcher is the filename pattern; hooks can add more paths to watch by returning watchPaths.",
   },
   {
     value: "CwdChanged",

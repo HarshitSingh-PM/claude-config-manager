@@ -46,6 +46,7 @@ import { OrchestratorShell } from "./OrchestratorShell";
 import TransferShell from "./TransferShell";
 import TerminalShell from "./terminal/TerminalShell";
 import { UsageWidget } from "./UsageWidget";
+import { VersionBadge } from "./VersionBadge";
 import { MotivationBanner } from "./MotivationBanner";
 import { MacPermissionsGate } from "./MacPermissionsGate";
 import { GlobalDropReader } from "./DocReader";
@@ -357,7 +358,7 @@ export function AppShell() {
     <GlobalDropReader fileDrops={view !== "terminal"} />
     <div className="min-h-screen flex flex-col">
       {/* ─── Header ───────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 border-b border-[color:var(--border)] bg-[color:var(--bg)]/70 backdrop-blur-xl shadow-[0_1px_0_0_var(--accent-soft)]">
+      <header className="sticky top-0 z-30 border-b border-[color:var(--border)] bg-[color:var(--bg)]/70 backdrop-blur-xl ">
         <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center gap-5">
           {/* Brand */}
           <div className="flex items-center gap-2.5 shrink-0">
@@ -365,7 +366,7 @@ export function AppShell() {
               initial={{ rotate: -8, scale: 0.85, opacity: 0 }}
               animate={{ rotate: 0, scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="relative h-9 w-9 rounded-[7px] bg-[color:var(--primary)] flex items-center justify-center text-[color:var(--primary-ink)] shadow-[var(--shadow-md)]"
+              className="relative h-9 w-9 rounded-[11px] bg-[color:var(--primary)] flex items-center justify-center text-[color:var(--primary-ink)] shadow-[var(--shadow-md)]"
             >
               <TerminalSquare size={18} strokeWidth={2.6} />
             </motion.div>
@@ -373,12 +374,12 @@ export function AppShell() {
               <h1 className="text-[15px] font-semibold tracking-[-0.02em] text-[color:var(--fg)]">
                 Claude Config
               </h1>
-              <p className="t-eyebrow text-[color:var(--fg-faint)] mt-1.5">Control Center</p>
+              <p className="t-eyebrow text-[color:var(--fg-faint)] mt-1.5">Mission Control</p>
             </div>
           </div>
 
           {/* Primary nav */}
-          <nav className="relative inline-flex items-center gap-0.5 rounded-[9px] border border-[color:var(--border)] bg-[color:var(--bg-elev-2)] p-1 overflow-x-auto">
+          <nav className="relative inline-flex items-center gap-0.5 rounded-full border border-[color:var(--border)] bg-[color:var(--bg-elev-2)] p-1 overflow-x-auto">
             {NAV.map(({ v, label, Icon }) => {
               const active = view === v;
               return (
@@ -387,12 +388,12 @@ export function AppShell() {
                   onClick={() => setView(v)}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 600, damping: 30 }}
-                  className="relative z-10 inline-flex items-center gap-1.5 px-3.5 h-9 rounded-[6px] text-[13px] font-medium whitespace-nowrap"
+                  className="relative z-10 inline-flex items-center gap-1.5 px-3.5 h-9 rounded-full text-[13px] font-medium whitespace-nowrap"
                 >
                   {active && (
                     <motion.div
                       layoutId="primary-nav-pill"
-                      className="absolute inset-0 rounded-[6px] bg-[color:var(--primary)] shadow-[var(--shadow-sm)]"
+                      className="absolute inset-0 rounded-full bg-[color:var(--primary)] shadow-[var(--shadow-sm)]"
                       transition={{ type: "spring", stiffness: 480, damping: 34 }}
                     />
                   )}
@@ -472,6 +473,7 @@ export function AppShell() {
                 </div>
               </Tooltip>
             )}
+            <VersionBadge />
             <UsageWidget />
             <a
               href="https://github.com/HarshitSingh-PM/claude-config-manager"

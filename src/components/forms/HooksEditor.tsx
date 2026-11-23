@@ -27,9 +27,9 @@ const handlerTypes = [
 // Keys that belong to one handler type only; dropped when the type changes so
 // a command hook never carries a stale `url`.
 const typeKeys: Record<string, string[]> = {
-  command: ["command", "args", "async", "asyncRewake", "shell"],
-  http: ["url", "headers", "allowedEnvVars"],
-  mcp_tool: ["server", "tool", "input"],
+  command: ["command", "args", "async", "asyncRewake", "shell", "onFailure"],
+  http: ["url", "headers", "allowedEnvVars", "onFailure"],
+  mcp_tool: ["server", "tool", "input", "onFailure"],
   prompt: ["prompt", "model"],
   agent: ["prompt", "model"],
 };
@@ -204,7 +204,7 @@ function HandlerEditor({
               placeholder="Check whether every task in $ARGUMENTS is complete. Respond with a decision."
             />
           </Row>
-          <Row label="Model" tip="Model used for the evaluation. Defaults to the background model.">
+          <Row label="Model" tip="Model used for the evaluation — a full model ID or an alias such as haiku or sonnet. Defaults to the background model.">
             <TextInput value={s("model")} onChange={(v) => set("model", v)} placeholder="haiku" monospaced />
           </Row>
         </>
@@ -219,6 +219,18 @@ function HandlerEditor({
         <Row label="Timeout (seconds)" tip="Defaults: 600 for command, http and mcp_tool; 30 for prompt; 60 for agent.">
           <NumberInput value={handler.timeout as number | undefined} onChange={(v) => set("timeout", v)} placeholder="600" min={1} />
         </Row>
+        {(type === "command" || type === "http" || type === "mcp_tool") && (
+          <Row label="On failure" tip='onFailure: "block" makes a hook that cannot start, times out, or exits with an unexpected code block the action instead of letting it through.'>
+            <Select
+              value={s("onFailure")}
+              onChange={(v) => set("onFailure", v)}
+              options={[
+                { value: "", label: "(default: let it through)" },
+                { value: "block", label: "block" },
+              ]}
+            />
+          </Row>
+        )}
         <Row label="Spinner message" tip="Shown in the spinner while the hook runs.">
           <TextInput value={s("statusMessage")} onChange={(v) => set("statusMessage", v)} placeholder="Linting…" />
         </Row>

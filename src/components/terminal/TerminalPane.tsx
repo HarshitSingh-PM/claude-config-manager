@@ -5,16 +5,16 @@ import "@xterm/xterm/css/xterm.css";
 // Terminal color theme, matched to the app's design tokens (globals.css). xterm
 // needs concrete hex values, so these mirror --bg / --fg / --accent etc.
 const THEME = {
-  background: "#0a0a0c",
-  foreground: "#ededee",
-  cursor: "#818cf8",
-  cursorAccent: "#0a0a0c",
-  selectionBackground: "rgba(129,140,248,0.30)",
+  background: "#14110f",
+  foreground: "#f5f1ec",
+  cursor: "#e5805a",
+  cursorAccent: "#14110f",
+  selectionBackground: "rgba(229,128,90,0.30)",
   black: "#161619",
   red: "#f87171",
   green: "#34d399",
   yellow: "#fbbf24",
-  blue: "#818cf8",
+  blue: "#6ea0ff",
   magenta: "#a78bfa",
   cyan: "#22d3ee",
   white: "#a1a1aa",

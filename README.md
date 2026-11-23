@@ -144,7 +144,7 @@ Precedence (later wins): user → project shared → project local → enterpris
 
 ### What it edits
 
-- **`settings.json`** — every key in the Claude Code 2.1.28x settings reference, in 16 collapsible, filterable groups: model & reasoning (effort caps, fallback chain, fast mode, ultracode, prompt-cache lifetime), permissions and auto-mode classifier rules, the full sandbox (filesystem, network, credentials), MCP allow/deny lists, env, memory & context, interface & terminal, status line, git attribution, plugins & skills, agents & worktrees, Remote Control & notifications, auth helpers, updates & privacy, and managed-only policy keys. Toggles show Claude Code's real default when a key is unset.
+- **`settings.json`** — every key in the Claude Code 2.1.330 settings reference, in 16 collapsible, filterable groups: model & reasoning (effort caps, fallback chain, fast mode, ultracode, prompt-cache lifetime), permissions and auto-mode classifier rules, the full sandbox (filesystem, network, credentials), MCP allow/deny lists, env, memory & context, interface & terminal, status line, git attribution, plugins & skills, agents & worktrees, Remote Control & notifications, auth helpers, updates & privacy, and managed-only policy keys. Toggles show Claude Code's real default when a key is unset.
 - **Hooks builder** — all 33 lifecycle events (incl. `PreModelSwitch` / `PostModelSwitch`), matcher hints per event, and all five handler types: `command`, `http`, `mcp_tool`, `prompt`, `agent`.
 - **Credentials** *(Global Claude only)* — AWS, GCP, Azure, Cloudflare, Fly, Vercel, Netlify, GitHub, GitLab, Postgres, Supabase, Neon, MongoDB, Redis, Slack, Linear, Notion, OpenAI, Anthropic, Stripe, Sentry, Datadog and more — masked inputs, eye-toggles, deep links, written into the `env` block of `~/.claude/settings.json`.
 - **`CLAUDE.md`** / **`CLAUDE.local.md`** — markdown editor with line/char counts, 12 section templates, and four full-doc presets (Karpathy, HumanLayer, Trail of Bits, Minimal).
@@ -201,7 +201,7 @@ A bird's-eye view of every project that uses Claude — discovered by scanning y
 
 ## Design
 
-A redesigned, high-contrast **mechanical** interface: a monochrome canvas with a disciplined **primary-color** accent system — **blue** for interactive/active, **red** for live/destructive, **yellow** for warnings — over a precise engineering-grid backdrop. Animated view transitions, count-up metrics, and skeleton loaders throughout, all honoring `prefers-reduced-motion`. A motivational line greets you on open, and a first-run macOS gate walks you through the folder permissions Claude needs to create projects.
+The **v0.14 "Ember"** redesign: warm graphite surfaces, a single coral brand accent, and real semantic colors — **green** for healthy/saved, **amber** for warnings, **red** for live/destructive. Softer radii, pill navigation, and a header chip that compares your installed Claude Code version with the version this app's forms cover. Animated view transitions, count-up metrics and skeleton loaders honor `prefers-reduced-motion`.
 
 ---
 

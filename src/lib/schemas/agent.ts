@@ -33,11 +33,13 @@ export const agentSchema: Schema = {
         { value: "", label: "(default subagent model)" },
         { value: "inherit", label: "inherit — same model as the main conversation" },
         { value: "sonnet", label: "sonnet — Sonnet 5.5, balanced" },
-        { value: "haiku", label: "haiku — Haiku 4.5, fast & cheap" },
+        { value: "haiku", label: "haiku — Haiku 5.5, fast & cheap" },
         { value: "opus", label: "opus — Opus 5.5, most capable everyday model" },
-        { value: "fable", label: "fable — Fable 5.1, premium" },
+        { value: "fable", label: "fable — Fable 5.2, premium" },
         { value: "claude-opus-5-5", label: "claude-opus-5-5 (pinned)" },
         { value: "claude-sonnet-5-5", label: "claude-sonnet-5-5 (pinned)" },
+        { value: "claude-haiku-5-5", label: "claude-haiku-5-5 (pinned)" },
+        { value: "claude-fable-5-2", label: "claude-fable-5-2 (pinned)" },
       ],
     },
     {
@@ -92,6 +94,15 @@ export const agentSchema: Schema = {
       label: "Max turns",
       tooltip: "Cap agentic turns. At the limit the output is returned marked as partial and Claude can resume the agent.",
       placeholder: "20",
+      min: 1,
+    },
+    {
+      type: "number",
+      key: "autoCompactWindow",
+      label: "Auto-compact window (tokens)",
+      tooltip:
+        "Auto-compact this agent earlier than the main conversation's window. It can lower the window set by CLAUDE_CODE_AUTO_COMPACT_WINDOW but never raise it.",
+      placeholder: "200000",
       min: 1,
     },
     {

@@ -52,8 +52,8 @@ type Post = (body: Record<string, unknown>) => Promise<Record<string, unknown> &
 const MODELS = [
   { value: "sonnet", label: "Sonnet 5.5 — fast, balanced (recommended)" },
   { value: "opus", label: "Opus 5.5 — most capable everyday model" },
-  { value: "haiku", label: "Haiku 4.5 — cheapest, quick" },
-  { value: "fable", label: "Fable 5.1 — highest capability, premium cost" },
+  { value: "haiku", label: "Haiku 5.5 — cheapest, quick" },
+  { value: "fable", label: "Fable 5.2 — highest capability, premium cost" },
 ];
 
 const PERM_MODES: { value: PermMode; label: string }[] = [
